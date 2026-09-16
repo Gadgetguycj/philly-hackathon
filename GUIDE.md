@@ -19,7 +19,7 @@ Pick one tool. If you have none, pick Cursor.
 
 - **Cursor.** Download from https://cursor.com/download, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
 - **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon` run the installer: on macOS `curl -fsSL https://claude.ai/install.sh | bash`, on Windows in PowerShell `irm https://claude.ai/install.ps1 | iex`. Open a new terminal in `hackathon`, run `claude`, and sign in when it asks.
-- **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon` run `node --version`. If it prints anything below v22, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @openai/codex`; if that fails with a permission error on macOS, run `sudo npm install -g @openai/codex`. Then run `codex` and sign in when it asks.
+- **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon` run the installer: on macOS `curl -fsSL https://chatgpt.com/codex/install.sh | sh`, on Windows in PowerShell `irm https://chatgpt.com/codex/install.ps1 | iex`. Open a new terminal in `hackathon`, run `codex`, and sign in when it asks.
 
 Terminal commands in this guide are typed in a terminal. Prompts are pasted into the tool's chat.
 
