@@ -6,20 +6,15 @@ Before you start you need a laptop you can install software on, a GitHub account
 
 ## Part 1. Set up
 
-### 1. Make a project folder and pick one coding tool
+### 1. Pick where you will work
 
-Create an empty folder on your Desktop named `hackathon`. Everything below happens in that folder.
+Use the coding tool you already have. Any of these can do everything in this guide from a browser or a desktop app:
 
-How to open a terminal in that folder, when a step says to:
+- **Cursor.** Desktop: download from https://cursor.com/download, sign in, then File, Open Folder, and choose an empty folder named `hackathon`. Web: open https://cursor.com/agents; cloud agents need a paid Cursor plan. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card first.
+- **Claude Code.** Desktop app or terminal, opened in an empty folder named `hackathon`. Web: https://claude.ai/code, connected to a GitHub repository of yours (any empty repository works).
+- **Codex.** Desktop app or terminal, opened in an empty folder named `hackathon`. Codex on the web cannot connect MCP servers, so use the desktop or terminal version.
 
-- **Windows.** Right-click the `hackathon` folder, choose Open in Terminal. Also install Git for Windows from https://git-scm.com/downloads/win once with its default options; your coding agent runs the setup commands through it.
-- **macOS.** Open Terminal from Spotlight, type `cd ` with a space, drag the `hackathon` folder onto the Terminal window, press Enter. The prompt now ends in `hackathon`.
-
-Use the coding tool you already have. If you already use Claude Code or Codex, open it in the `hackathon` folder and skip to step 2. If you have neither, use Cursor:
-
-- **Cursor.** Download from https://cursor.com/download, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
-
-Terminal commands in this guide are typed in a terminal. Prompts are pasted into the tool's chat.
+If you have none of these, use Cursor.
 
 ### 2. Create your GalaxyGate account
 
@@ -31,15 +26,15 @@ Terminal commands in this guide are typed in a terminal. Prompts are pasted into
 
 1. Sign up at https://console.runpod.io/signup.
 2. Open the RunPod credit link from your check-in email and redeem it. Your balance should read $15.
-3. In the console open Settings, expand API Keys, click Create API Key. Name it `hackathon-app`, choose the permission `All`, create it, and copy the key now. RunPod shows it only once. You paste it into the prompt in step 6.
+3. In the console open Settings, expand API Keys, click Create API Key. Name it `hackathon-app`, choose the permission `All`, create it, and copy the key now. RunPod shows it only once. You paste it into the prompt in step 5.
 
 This key can spend your credit. It goes into your app's environment on your server, never into your code or your repository. Revoke it on the same page after the event.
 
 ### 4. Connect the two MCP servers
 
-Both servers sign you in through a browser window. There is no key to paste for this step.
+Both servers sign you in through a browser window. There is no key to paste for this step. The two addresses are `https://mcp.galaxygate.net/mcp` and `https://mcp.getrunpod.io/`.
 
-**Cursor.** In Cursor's Explorer sidebar click New File, type `.cursor/mcp.json` as the whole file name, press Enter, and paste this. Do not try to create the `.cursor` folder in File Explorer or Finder; they refuse names starting with a dot. If the file already exists, add the two entries inside its `mcpServers` object instead of replacing it.
+**Cursor desktop.** In Cursor's Explorer sidebar click New File, type `.cursor/mcp.json` as the whole file name, press Enter, and paste this. Do not try to create the `.cursor` folder in File Explorer or Finder; they refuse names starting with a dot. If the file already exists, add the two entries inside its `mcpServers` object instead of replacing it.
 
 ```json
 {
@@ -52,7 +47,9 @@ Both servers sign you in through a browser window. There is no key to paste for 
 
 Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on.
 
-**Claude Code.** In a terminal opened in `hackathon`:
+**Cursor web.** At https://cursor.com/agents open the MCP dropdown, add each address as an HTTP server, and complete the sign-in each one asks for.
+
+**Claude Code desktop or terminal.** In a terminal opened in `hackathon`:
 
 ```bash
 claude mcp add --transport http --scope user galaxygate https://mcp.galaxygate.net/mcp
@@ -60,6 +57,8 @@ claude mcp add --transport http --scope user runpod https://mcp.getrunpod.io/
 ```
 
 Then start `claude`, type `/mcp`, and complete the sign-in for each server.
+
+**Claude Code web.** At https://claude.ai open Customize, then Connectors, then Add custom connector. Paste one address, save, and sign in when asked; repeat for the second. Then in https://claude.ai/code start a session on your repository and turn both connectors on for it. In the session's environment settings set network access to Full so the checks in step 5 can reach your server.
 
 **Codex.** In a terminal opened in `hackathon`:
 
@@ -70,23 +69,9 @@ codex mcp add runpod --url https://mcp.getrunpod.io/
 codex mcp login runpod
 ```
 
-Codex blocks network access inside its sandbox by default, and the setup prompt needs SSH. Start Codex for this project with:
-
-```bash
-codex --sandbox workspace-write -c sandbox_workspace_write.network_access=true
-```
-
-Codex will ask permission the first time the agent writes the SSH key and connects to your server; approve those requests. Do not turn the sandbox off.
-
 **Check.** Paste this into your tool: `Call the GalaxyGate list_workspaces tool and the RunPod list-endpoints tool and show me both results.` You should see one GalaxyGate workspace with your name on it, and a RunPod endpoint list, which may be empty. If either call is denied, redo the sign-in for that server.
 
-### 5. Windows only: make sure SSH exists
-
-This check is for your own terminal; your agent runs its commands through Git Bash, which brings its own SSH. In a terminal opened in `hackathon` run `ssh -V`. If it prints a version, skip ahead. Otherwise open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0` (the name contains four tildes), wait for it to finish, close that window, and run `ssh -V` in your normal terminal again.
-
-macOS and Linux already have SSH.
-
-### 6. Create your server
+### 5. Create your server, your GPU endpoint, and the demo
 
 Replace `yourteam` with your team name: 3 to 32 characters, lowercase letters, digits, and hyphens only, starting and ending with a letter or digit. Replace the key. Then paste the whole block into your tool.
 
@@ -99,11 +84,11 @@ Read https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md
 
 If your tool cannot open web pages, open https://github.com/GalaxyGate/philly-hackathon/blob/main/AGENT.md yourself, copy its whole text, and paste it under the two lines instead.
 
-The agent creates an SSH key, uploads it to your GalaxyGate workspace, creates your server, waits for it to boot, deploys the demo app with a public name, runs the demo once for real, and writes `HACKATHON.md` in your folder with every id you will need.
+The agent creates your GalaxyGate server, prepares it, creates a vision-model endpoint on RunPod under your account, deploys the demo app with a public name, warms the model, runs one real generation, and writes `HACKATHON.md` in your folder with every id you will need. The first generation downloads the model onto the GPU and takes several minutes; later ones take seconds.
 
-Done when the agent reports that both checks passed and gives you your URL, and that URL opens in your browser and roasts a public GitHub repository when you paste one.
+Done when the agent reports that the health check and one real generation passed and gives you your URL, and that URL opens on your phone.
 
-A note on the key. Pasting a secret into an agent chat is bad practice: it lands in the chat history, in tool-call logs, and in the app's environment on your server, where anyone in your GalaxyGate workspace can see it. For this event it is acceptable because the key only holds $15 of credit that you can revoke in the RunPod console the moment the event ends. Keep the workspace to your team, and revoke the key after the event. Your SSH key is in the `.hackathon` folder inside your project; it is listed in `.gitignore`, so it stays out of your repository.
+A note on the key. Pasting a secret into an agent chat is bad practice: it lands in the chat history, in tool-call logs, and in the app's environment on your server, where anyone in your GalaxyGate workspace can see it. For this event it is acceptable because the key only holds $15 of credit that you can revoke in the RunPod console the moment the event ends. Keep the workspace to your team, and revoke the key after the event.
 
 ## Part 2. Build
 
@@ -111,21 +96,25 @@ A note on the key. Pasting a secret into an agent chat is bad practice: it lands
 
 Your app, its data, and your RunPod key live on your GalaxyGate server. Your app's backend calls RunPod over HTTPS. Never call RunPod from browser JavaScript, and never put the key in your repository.
 
+### The demo: Sketch to Site
+
+Open your URL on your phone. Photograph a website sketch drawn on paper or a whiteboard, add a line of notes if you like, and press Build the page. A vision model on your RunPod endpoint turns the photo into a complete web page, your server saves it, and you get a link and a QR code to the live page. Every page you build is listed at `/sites` on your server. As shipped, the app keeps its pages on the `/data` mount, so a redeploy keeps them.
+
 ### Change the demo, or start your own app
 
-The demo running on your server is `demos/roast` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone https://github.com/<your GitHub username>/philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos. As shipped, the demo forgets its roast when the page reloads; keeping results across a reload is worth 5 scoring points.
+The demo running on your server is `demos/sketch` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone https://github.com/<your GitHub username>/philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos. Push your changes to your fork; the server builds from there.
 
-To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for demos/roast.` The agent copies the folder to your server over SSH, builds the image there into a registry that runs on the server, and switches the app to it. On Windows this needs Git for Windows. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
+To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for https://github.com/<your GitHub username>/philly-hackathon and folder demos/sketch.` The agent has your server clone your fork, build the image into a registry that runs on the server, and switch the app to it. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
 
 ### Use a GPU model from your app
 
-Ready-made models, no deployment. Tell your agent: `Add a route to my app that generates an image with RunPod's Flux Schnell public endpoint using the RUNPOD_API_KEY from the environment, saves the image under /data, and shows it on a page.` The endpoint is `https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync`; it takes `{"input":{"prompt":"...","width":768,"height":768}}` with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns the image URL at `output.image_url`. Other ready-made models, including Qwen for text, are listed at https://docs.runpod.io/public-endpoints/overview.
+Your own endpoint. Your agent already created a serverless endpoint named `hackathon-vl` running `Qwen/Qwen2.5-VL-7B-Instruct`, a vision-language model that reads images and text. Your app calls it at `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` exactly like the OpenAI chat API, with your RunPod key, and an image goes in as an `image_url` content part holding a `data:image/jpeg;base64,...` URL. To run a different Hugging Face model, tell your agent: `Using the RunPod MCP, create a serverless endpoint named hackathon-llm with image runpod/worker-v1-vllm:v2.27.0 on the ADA_24 pool, workers min 0 max 1, idle timeout 60, env MODEL_NAME=<model> and MAX_MODEL_LEN=8192, then send it one chat completion and show me the reply and the endpoint id.` The first request after a quiet period waits while the model loads; keep your app's timeout above two minutes.
 
-Your own Hugging Face model. Tell your agent: `Using the RunPod MCP, call list-endpoints and stop if an endpoint named hackathon-llm exists. Otherwise call deploy-hub-repo with repo runpod-workers/worker-vllm, name hackathon-llm, gpuIds ADA_24, workersMin 0, workersMax 1, idleTimeout 60, and env MODEL_NAME=Qwen/Qwen2.5-Coder-7B-Instruct and MAX_MODEL_LEN=8192. Then send one chat completion to it and show me the reply and the endpoint id.` Your app then calls `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` with your key and that model name. The first request after a quiet period waits while the model loads; keep your app's timeout above two minutes.
+Ready-made models, no deployment. Tell your agent: `Add a route to my app that generates an image with RunPod's Flux Schnell public endpoint using the RUNPOD_API_KEY from the environment, saves the image under /data, and shows it on a page.` The endpoint is `https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync`; it takes `{"input":{"prompt":"...","width":768,"height":768}}` with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns the image URL at `output.image_url`. Text-to-speech, text models, and other ready-made models are listed at https://docs.runpod.io/public-endpoints/overview.
 
 ### Spending
 
-The demo app caps itself at 25 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. The roast demo also makes two GitHub API calls per roast, and GitHub allows 60 per hour per server without a token; if you need more, ask your agent to add a `GITHUB_TOKEN` environment variable holding a fine-grained GitHub token with public read access, keeping every existing variable. Check your RunPod balance in the console before you submit.
+The demo app caps itself at 20 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. Your endpoint scales to zero when idle and bills by the second while a request runs. Check your RunPod balance in the console before you submit.
 
 ## Part 3. Submit
 
@@ -170,15 +159,15 @@ Ties break on Simple to use, then Reliable. If your app is down when judges test
 
 ## When something fails
 
-- **An MCP server shows Needs login or a tool call is denied.** Redo that server's sign-in: Cursor in Customize, MCP; Claude Code with `/mcp`; Codex with `codex mcp login <name>`.
-- **The agent says the server never became ready.** Ask it to run `get_instance` and show the state, and `cloud-init status --long` over SSH. Bring both to the GalaxyGate table.
+- **An MCP server shows Needs login or a tool call is denied.** Redo that server's sign-in: Cursor desktop in Customize, MCP; Cursor web in the MCP dropdown; Claude Code desktop with `/mcp`; Claude Code web in Customize, Connectors; Codex with `codex mcp login <name>`.
+- **The agent says the server never became ready.** Ask it to run `get_instance` and show the state. Bring it to the GalaxyGate table.
 - **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow state and its failed children and bring them to the table.
-- **The roast shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment, keeping every existing variable.
+- **The generation shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment, keeping every existing variable.
 - **RunPod answers 402.** Your credit is gone. Check the console.
-- **A generation hangs.** Ask the agent to read the app logs and, for your own endpoint, the endpoint's workers in the RunPod console. Do not resend the same request repeatedly.
+- **A generation hangs.** The first request after a quiet period loads the model and can take several minutes. Ask the agent to read the app logs and to check the endpoint's workers in the RunPod console. Do not resend the same request repeatedly.
 
 When you ask for help, bring: your tool, the step you were on, the ids from `HACKATHON.md`, and the exact error text with your key removed.
 
 ## After the event
 
-Delete the server from the GalaxyGate panel or ask your agent to, revoke the `hackathon-app` key in the RunPod console, and check that no RunPod endpoint you created still has workers running.
+Delete the server from the GalaxyGate panel or ask your agent to, delete the `hackathon-vl` endpoint in the RunPod console, revoke the `hackathon-app` key there, and check that no other endpoint you created still has workers running.
