@@ -26,6 +26,16 @@ HTML_EVENTS = (
 )
 
 
+# A page that runs past max_tokens: the stream stops mid-document and says why.
+TRUNCATED_EVENTS = (
+    '{"choices":[{"delta":{"content":"<!doctype html>\\n<html><head><style>body{font-family:sans-serif}'
+    '</style></head><body><h1>ADA"}}]}',
+    '{"choices":[{"delta":{"content":"\'S GARAGE</h1><p>OPEN TUE"},"finish_reason":"length"}]}',
+    '{"choices":[],"usage":{"prompt_tokens":2400,"completion_tokens":5000,"total_tokens":7400}}',
+    "[DONE]",
+)
+
+
 def configure_app(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(main, "DATA_DIR", tmp_path)
     monkeypatch.setattr(main, "SITES_DIR", tmp_path / "sites")
@@ -192,8 +202,10 @@ def test_keep_alive_bytes_keep_flowing_while_the_model_writes(monkeypatch, tmp_p
     # The model leaves 25 seconds between tokens, so the newlines have to carry on after the space
     # that says writing began. Nothing may go quiet for the whole write.
     assert chunks[space + 1 : document].count(b"\n") >= 2
-    # Twice the interval, because a test this fast cannot tell a late flush from a busy scheduler.
-    assert max(gaps) <= interval * 2
+    # The gaps between the flushed bytes, which is the stretch the model controls. The first gap
+    # covers reading the upload and downscaling it, and the last covers writing the page to disk,
+    # and neither waits on the model. Twice the interval leaves room for a busy scheduler.
+    assert max(gaps[1:-1]) <= interval * 2
     assert body["url"] == f"/s/{body['id']}/"
     assert request_app("GET", body["url"]).status_code == 200
 
@@ -331,6 +343,21 @@ def test_reply_without_a_document_is_reported_and_stores_nothing(monkeypatch, tm
     assert "url" not in body
     assert request_app("GET", "/api/sites").json() == []
     assert not list((tmp_path / "sites").iterdir())
+    assert request_app("GET", "/api/usage").json()["count"] == 0
+
+
+def test_a_page_cut_off_at_the_token_cap_blames_the_cap_and_not_the_sketch(monkeypatch, tmp_path, fake_upstream):
+    fake_upstream(monkeypatch, events=TRUNCATED_EVENTS)
+    configure_app(monkeypatch, tmp_path)
+
+    body = post_sketch().json()
+
+    assert body["detail"] == (
+        "The model ran out of room before finishing the page. "
+        "Try a simpler sketch, or ask for fewer sections in the notes."
+    )
+    assert "url" not in body
+    assert request_app("GET", "/api/sites").json() == []
     assert request_app("GET", "/api/usage").json()["count"] == 0
 
 

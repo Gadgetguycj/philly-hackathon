@@ -74,7 +74,9 @@ def build_chat_request(data_url: str, notes: str = "") -> dict:
             },
         ],
         "temperature": 0.3,
-        "max_tokens": 4_000,
+        # MAX_MODEL_LEN is 8192. A square photo at MAX_IMAGE_EDGE costs 2116 visual tokens, and the
+        # system prompt and the notes cap add roughly 350 more, so 5000 leaves about 700 spare.
+        "max_tokens": 5_000,
         "stream": True,
     }
 
@@ -148,6 +150,9 @@ async def stream_page(data_url: str, notes: str = "", usage: dict | None = None)
                 if not isinstance(choices, list) or not choices or not isinstance(choices[0], dict):
                     continue
                 choice = choices[0]
+                finish = choice.get("finish_reason")
+                if finish and usage is not None:
+                    usage["finish_reason"] = finish
                 delta = choice.get("delta")
                 if isinstance(delta, dict):
                     token = delta.get("content")

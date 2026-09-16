@@ -283,7 +283,14 @@ async def build_page(image: UploadFile = File(...), notes: str = Form("")):
             site_id = await asyncio.to_thread(save_site, html, photo, notes, reported.get("total_tokens"))
             saved = True
         except (RuntimeError, httpx.HTTPError, OSError) as exc:
-            yield json.dumps({"detail": upstream_detail(exc)})
+            if reported.get("finish_reason") == "length":
+                detail = (
+                    "The model ran out of room before finishing the page. "
+                    "Try a simpler sketch, or ask for fewer sections in the notes."
+                )
+            else:
+                detail = upstream_detail(exc)
+            yield json.dumps({"detail": detail})
             return
         finally:
             # Runs on a client disconnect too, where GeneratorExit matches no except clause.
