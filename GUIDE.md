@@ -17,7 +17,7 @@ How to open a terminal in that folder, when a step says to:
 
 Pick one tool. If you have none, pick Cursor.
 
-- **Cursor.** Download from https://cursor.com/downloads, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
+- **Cursor.** Download from https://cursor.com/download, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
 - **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon`, run `node --version`. If it prints anything below v22, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @anthropic-ai/claude-code`, then `claude`, and sign in when it asks.
 - **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. Check Node.js the same way. Then run `npm install -g @openai/codex`, then `codex`, and sign in when it asks.
 
