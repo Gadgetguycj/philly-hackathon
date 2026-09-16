@@ -84,7 +84,7 @@ Codex will ask permission the first time the agent writes the SSH key and connec
 
 ### 5. Windows only: make sure SSH exists
 
-This check is for your own terminal; your agent runs its commands through Git Bash, which brings its own SSH. In a terminal opened in `hackathon` run `ssh -V`. If it prints a version, skip ahead. Otherwise open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`, wait for it to finish, close that window, and run `ssh -V` in your normal terminal again.
+This check is for your own terminal; your agent runs its commands through Git Bash, which brings its own SSH. In a terminal opened in `hackathon` run `ssh -V`. If it prints a version, skip ahead. Otherwise open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0` (the name contains four tildes), wait for it to finish, close that window, and run `ssh -V` in your normal terminal again.
 
 macOS and Linux already have SSH.
 
