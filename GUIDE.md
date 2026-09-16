@@ -18,7 +18,7 @@ How to open a terminal in that folder, when a step says to:
 Pick one tool. If you have none, pick Cursor.
 
 - **Cursor.** Download from https://cursor.com/downloads, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
-- **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon`, run `node --version`. If it prints anything other than a version number of v20 or higher, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @anthropic-ai/claude-code`, then `claude`, and sign in when it asks.
+- **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon`, run `node --version`. If it prints anything below v22, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @anthropic-ai/claude-code`, then `claude`, and sign in when it asks.
 - **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. Check Node.js the same way. Then run `npm install -g @openai/codex`, then `codex`, and sign in when it asks.
 
 Terminal commands in this guide are typed in a terminal. Prompts are pasted into the tool's chat.
@@ -117,11 +117,11 @@ Your app, its data, and your RunPod key live on your GalaxyGate server. Your app
 
 The demo running on your server is `demos/roast` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone my fork of philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos.
 
-To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for demos/roast.` The agent copies the folder to your server over SSH, builds the image there, and switches the app to it. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
+To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for demos/roast.` The agent copies the folder to your server over SSH, builds the image there into a registry that runs on the server, and switches the app to it. On Windows this needs Git for Windows. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
 
 ### Use a GPU model from your app
 
-Ready-made models, no deployment. Tell your agent: `Add a route to my app that generates an image with RunPod's Flux Schnell public endpoint using the RUNPOD_API_KEY from the environment, saves the image under /data, and shows it on a page.` The endpoint is `https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync`; it takes `{"input":{"prompt":"...","width":768,"height":768}}` with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns the image URL inside `output`, as `image_url` or `result`. Other ready-made models, including Qwen for text, are listed at https://docs.runpod.io/public-endpoints/overview.
+Ready-made models, no deployment. Tell your agent: `Add a route to my app that generates an image with RunPod's Flux Schnell public endpoint using the RUNPOD_API_KEY from the environment, saves the image under /data, and shows it on a page.` The endpoint is `https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync`; it takes `{"input":{"prompt":"...","width":768,"height":768}}` with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns the image URL at `output.image_url`. Other ready-made models, including Qwen for text, are listed at https://docs.runpod.io/public-endpoints/overview.
 
 Your own Hugging Face model. Tell your agent: `Using the RunPod MCP, call list-endpoints and stop if an endpoint named hackathon-llm exists. Otherwise call deploy-hub-repo with repo runpod-workers/worker-vllm, name hackathon-llm, gpuIds ADA_24, workersMin 0, workersMax 1, idleTimeout 60, and env MODEL_NAME=Qwen/Qwen2.5-Coder-7B-Instruct and MAX_MODEL_LEN=8192. Then send one chat completion to it and show me the reply and the endpoint id.` Your app then calls `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` with your key and that model name. The first request after a quiet period waits while the model loads; keep your app's timeout above two minutes.
 
@@ -140,8 +140,8 @@ The demo app caps itself at 25 generations per hour so a stranger cannot drain y
 
 Submit at https://coffee-and-code-agent.devpost.com/ before the deadline shown there, and select the GalaxyGate prize. Alongside the standard fields, give judges:
 
-- Your app URL, GalaxyGate instance id and app id (all in `HACKATHON.md`), a screenshot of your GalaxyGate workspace activity log, and one exact input to try.
-- Your RunPod endpoint id, or the public model you used, plus one request record: a screenshot of the request in your RunPod console or a redacted response.
+- Your app URL, GalaxyGate instance id and app id (all in `HACKATHON.md`), your workflow history (ask your agent to print `list_workspace_workflows`, or screenshot the Workflows page in the panel), and one exact input to try.
+- Your RunPod endpoint id, or the public model you used, plus one request record: a screenshot of the request in your RunPod console, or the `id` field from one RunPod response.
 - Your repository, the commit you started from, the commit you submitted, and a short list of what you changed or built.
 - A video under three minutes and a README that lets a stranger run it. Check both open in a browser where you are signed out.
 
@@ -149,10 +149,10 @@ Do not include environment screens, API keys, private keys, or credit links in a
 
 ### Scoring, 100 points
 
-- **Live app, 20.** The URL opens (5), a judge's fresh input succeeds (10), and the result is still reachable afterwards (5).
-- **RunPod integration, 20.** A judge's fresh input produces a matching request in your RunPod console or a redacted response (10), and your app visibly uses the model's result (10).
-- **Agent-operated infrastructure, 15.** Your GalaxyGate workspace activity log shows the server created (5), the app deployed (5), and one later app update or restart (5), each inside the build period. Judges read the activity log in the panel with you at the table or from your screenshot of it.
-- **Agentic usefulness, 25.** A stated user task with a clear success condition (5), a trace showing the model choosing actions and using their results (10), success on a judge-supplied input (5), and one honestly demonstrated limitation (5). A single fixed model call earns no action points.
+- **Live app, 20.** The URL opens (5), a judge's fresh input succeeds (10), and the same result is still on screen after the judge reloads the page (5).
+- **RunPod integration, 20.** A judge's fresh input produces a request visible in your RunPod console or a RunPod response `id` you show the judge (10), and your app visibly uses the model's result (10).
+- **Agent-operated infrastructure, 15.** Your GalaxyGate workflow history shows an `instance.provision` (5), an `app.provision` (5), and one later app update or restart workflow (5), each started inside the build period. Your agent prints it with the `list_workspace_workflows` tool, and the panel shows it on the Workflows page.
+- **Agentic usefulness, 25.** A stated user task with a clear success condition (5), a page or log the judge can open that shows each model decision and each tool result and grows when the judge submits their own input (10), success on that judge-supplied input (5), and one honestly demonstrated limitation (5). A single fixed model call earns no action points.
 - **Reliability, safety, cost, 15.** Secrets kept out of the repository, logs, and screenshots (5), paid routes protected by a cap or login (5), a slow start or upstream error handled visibly (5).
 - **Submission, 5.** Video (2), README (2), the disclosures above (1).
 
@@ -162,8 +162,8 @@ Ties break on agentic usefulness, then reliability. If your app is down when jud
 
 - **An MCP server shows Needs login or a tool call is denied.** Redo that server's sign-in: Cursor in Customize, MCP; Claude Code with `/mcp`; Codex with `codex mcp login <name>`.
 - **The agent says the server never became ready.** Ask it to run `get_instance` and show the state, and `cloud-init status --long` over SSH. Bring both to the GalaxyGate table.
-- **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow message and bring it to the table.
-- **The roast shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment.
+- **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow state and its failed children and bring them to the table.
+- **The roast shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment with all four variables.
 - **RunPod answers 402.** Your credit is gone. Check the console.
 - **A generation hangs.** Ask the agent to read the app logs and, for your own endpoint, the endpoint's workers in the RunPod console. Do not resend the same request repeatedly.
 

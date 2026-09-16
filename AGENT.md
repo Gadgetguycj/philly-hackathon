@@ -2,9 +2,9 @@
 
 You are setting up a hackathon server on GalaxyGate for the user. The user's message contains two values: TEAM_NAME and RUNPOD_API_KEY. Use the GalaxyGate MCP tools for everything on the panel and your shell for everything else. Do not ask the user questions. Follow the stop rules in each step.
 
-Secret rule. RUNPOD_API_KEY appears exactly once in your work: inside the `environment` object of the `create_app` call in step 8. Never repeat it anywhere else: not in a shell command, not in a file you write, not in a log or error you quote. Assume the create_app call is visible in the chat history, and say so to the user at the end.
+Secret rule. RUNPOD_API_KEY appears only inside the `environment` object of a `create_app` or `update_app` call. Never anywhere else: not in a shell command, not in a file you write, not in a log or error you quote. An `update_app` environment replaces the whole set, so always send all four variables together. Assume those calls are visible in the chat history, and say so to the user at the end.
 
-Shell rule. Commands below are written for bash. On Windows, if Git for Windows is installed run each command through `bash -lc '...'`. If it is not, use PowerShell equivalents: `New-Item -ItemType Directory -Force` for `mkdir -p`, skip `chmod`, `Start-Sleep -Seconds N` for `sleep N`, `curl.exe` instead of `curl`, one command per line instead of `&&`, and write files with `Out-File -Encoding ascii`.
+Shell rule. Commands below are written for bash. On Windows, run them in Git Bash, which your tool uses when Git for Windows is installed; do not wrap them in another shell. If Git for Windows is missing, use PowerShell equivalents: `New-Item -ItemType Directory -Force` for `mkdir -p`, skip `chmod`, `Start-Sleep -Seconds N` for `sleep N`, `curl.exe` instead of `curl`, one command per line instead of `&&`, and write files with `Set-Content -Encoding ascii` (never `Out-File` or `>`, which truncate lines at the console width). Step 12 needs Git Bash.
 
 Waiting rule. Every wait below is a fixed number of polls with a fixed pause. Count the polls. Never poll past the count.
 
@@ -30,7 +30,7 @@ Call `list_instances` with `workspace_id` and `q` set to `INSTANCE_NAME`. If a r
 
 - Run `mkdir -p .hackathon && chmod 700 .hackathon` in the project folder.
 - If `.hackathon/galaxygate_hackathon` does not exist, run `ssh-keygen -t ed25519 -N "" -f .hackathon/galaxygate_hackathon -C hackathon`. If it exists but the `.pub` file is missing, run `ssh-keygen -y -f .hackathon/galaxygate_hackathon` and save the single output line to `.hackathon/galaxygate_hackathon.pub` as plain ASCII.
-- Read the public key text. Call `list_ssh_keys` with `workspace_id`. If a row's `public_key` equals this text, set `KEY_UPLOADED=false`. Otherwise call `upload_ssh_key` with `workspace_id`, name `hackathon-` followed by the first 8 characters of TEAM_NAME and 4 random digits, and the public key text; call `list_ssh_keys` again to confirm it is present; set `KEY_UPLOADED=true`.
+- Read the public key text. Call `list_ssh_keys` with `workspace_id`. Compare each row's `public_key` to this text after stripping surrounding whitespace and ignoring the trailing comment (the third space-separated field). If one matches, set `KEY_UPLOADED=false`. Otherwise call `upload_ssh_key` with `workspace_id`, name `hackathon-` followed by the first 8 characters of TEAM_NAME and 4 random digits, and the public key text; call `list_ssh_keys` again to confirm it is present; set `KEY_UPLOADED=true`.
 - If `REUSED` is true: if `KEY_UPLOADED` is true, call `sync_ssh_keys` with `instance_id` (workspace keys are injected only when a server is created). Then skip to step 5.
 
 ## 4. Create the server
@@ -70,7 +70,7 @@ Given an `app_id` and its `APP_DOMAIN`: poll `get_app` at most 32 times, pausing
 
 ## 8. Deploy the demo app
 
-Call `list_instance_apps` with `instance_id`. If a row's `name` equals `APP_NAME`, record its `id` as `APP_ID`, set `APP_DOMAIN` to its `domain`, and run the wait procedure on it. If the wait succeeds, skip to step 10, whatever the panel state says. If it fails, go to the recovery in step 9.
+Call `list_instance_apps` with `instance_id`. If a row's `name` equals `APP_NAME`, record its `id` as `APP_ID`, set `APP_DOMAIN` to its `domain` and `SUBDOMAIN` to the part of that domain before `.galaxygate.app`, and run the wait procedure on it. If the wait succeeds, skip to step 10, whatever the panel state says. If it fails, go to the recovery in step 9.
 
 Otherwise call `create_app` with `instance_id` and this body. Substitute the real values; the key value is the RUNPOD_API_KEY from the user's message, not the text of this template.
 
@@ -98,15 +98,15 @@ Run the wait procedure on `APP_ID`. If it succeeds, go to step 10.
 
 Recovery, at most once in this whole run:
 
-1. Call `get_workflow` with `workspace_id` and `APP_WORKFLOW`. Keep its `message` for the report.
-2. Call `delete_app` with `app_id`. If it succeeds, pause 30 seconds and repeat step 8's `create_app` with the same values.
-3. If `delete_app` is refused because the app is locked, leave that app alone. Set `APP_NAME=roast-2`, use `host_port` 8001, use `host_path` `/data/roast-2`, set `SUBDOMAIN` to the current value with `-2` appended, check it as in step 7, and call `create_app` with those values. Record the new `APP_ID` and `APP_WORKFLOW`.
-4. Run the wait procedure once more. If it fails, show the user the workflow message and stop.
+1. Call `get_workflow` with `workspace_id` and `APP_WORKFLOW`. Keep its `state` and, from `progress.children`, the `name` and `status` of every child that is not `COMPLETED`, for the report.
+2. Call `get_app` with `app_id`. If its `locked` field is set, go to 3. Otherwise call `delete_app` with `app_id`. Deletion is asynchronous: poll `get_app` with the old `app_id` at most 12 times, pausing 10 seconds, until it returns an error whose text contains `404`. Only then repeat step 8's `create_app` with the same values, and record the returned app `id` as `APP_ID` and workflow id as `APP_WORKFLOW`, replacing the old values. If the app is still there after 12 polls, go to 3.
+3. If the app was locked, or `delete_app` returned an error whose text contains `409`, leave that app alone. Set `APP_NAME=roast-2`, use `host_port` 8001, use `host_path` `/data/roast-2`, set `SUBDOMAIN` to the current value with `-2` appended, check it as in step 7, and call `create_app` with those values. Record the new `APP_ID` and `APP_WORKFLOW`, replacing the old values.
+4. Run the wait procedure once more. If it fails, show the user the workflow state and the non-completed children from 1, and stop.
 
 ## 10. Prove it works
 
-1. Health. `curl --fail --silent --show-error --connect-timeout 10 --max-time 30 https://APP_DOMAIN/health` passes when it prints JSON containing `"status":"ok"`, `"runpod_key_set":true` and `"model_configured":true`. When this step is reached outside the wait procedure, try it at most 12 times, pausing 15 seconds, and after 12 failures call `get_app_logs` with `app_id` and tail 100, show the user the log with the key redacted, and stop.
-2. Real roast. Run `curl --silent --show-error --max-time 240 -N -w '\nHTTP:%{http_code}\n' -H 'Content-Type: application/json' -d '{"repo_url":"https://github.com/GalaxyGate/philly-hackathon"}' https://APP_DOMAIN/api/roast` and save the output to a temporary file. Expected: `event: token` lines, then an `event: done` line, no `event: error` line, and `HTTP:200`. If an `error` event mentions 401, tell the user the key was not substituted or is wrong, and stop. If it mentions 402, tell the user their RunPod credit is exhausted, and stop. If it mentions an hourly limit or the code is 429, report the cap and stop. Any other `error` event: show its text redacted and stop.
+1. Health. `curl --fail --silent --show-error --connect-timeout 10 --max-time 30 https://APP_DOMAIN/health` passes when it prints JSON containing `"status":"ok"`, `"runpod_key_set":true` and `"model_configured":true`. When this step is reached outside the wait procedure, try it at most 12 times, pausing 15 seconds, and after 12 failures call `get_app_logs` with `app_id` and tail 100; if that errors, call `get_app` and report its `state`, `locked` and `container_id` instead. Show the user whichever you got, with the key redacted, and stop.
+2. Real roast. Run `curl --silent --show-error --max-time 240 -N -w '\nHTTP:%{http_code}\n' -H 'Content-Type: application/json' -d '{"repo_url":"https://github.com/GalaxyGate/philly-hackathon"}' https://APP_DOMAIN/api/roast` and save the output to a temporary file. Expected: `event: token` lines, then an `event: done` line, no `event: error` line, and `HTTP:200`. If an `error` event mentions 401, tell the user the key was not substituted or is wrong, and stop. If it mentions 402, tell the user their RunPod credit is exhausted, and stop. If it mentions an hourly limit, report the cap and stop. Any other `error` event: show its text redacted and stop.
 3. Tell the user the URL to open in their browser. Do not open it yourself.
 
 ## 11. Record and report
@@ -123,15 +123,18 @@ Then tell the user: the app URL, that the health check and one real roast succee
 
 ## 12. Redeploy after the user changes code
 
-When the user asks to redeploy an app folder (for example `demos/roast` in their fork):
+This step needs Git Bash on Windows; in PowerShell the pipe in 12.2 corrupts the archive. The panel always pulls an app's image from a registry when it deploys, so the new image goes into a registry that runs on the server itself and listens only on its loopback address.
 
-1. Copy the folder to the server: `tar czf - -C <parent of folder> <folder name> | ssh -i .hackathon/galaxygate_hackathon -o BatchMode=yes root@IPV4 'mkdir -p /opt/APP_NAME && tar xzf - -C /opt/APP_NAME --strip-components=1'`.
-2. Build on the server over the same ssh: `docker build -t APP_NAME:local /opt/APP_NAME`. If it fails, show the user the last lines and stop.
-3. Call `update_app` with `app_id` and body `{"image":"APP_NAME:local"}`. Run the wait procedure. Then repeat step 10.1 and 10.2.
-4. If `update_app` is refused, or the wait fails, tell the user, leave the running app untouched, and stop. Do not start containers outside the panel.
+0. Recover the values. Read `HACKATHON.md` in the project for `INSTANCE_ID`, `IPV4`, `APP_NAME`, `APP_ID` and `APP_DOMAIN`. If it is missing, call `list_instances` with `q` set to the instance name, then `list_instance_apps`, and confirm the app's domain with the user before touching anything.
+1. Make sure the server has a registry, once: `ssh -n -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'docker ps --format "{{.Names}}" | grep -qx registry || docker run -d --restart unless-stopped -p 127.0.0.1:5000:5000 --name registry registry:2'`.
+2. Copy the folder: `tar czf - --exclude=.hackathon -C <parent of folder> <folder name> | ssh -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'mkdir -p /opt/APP_NAME && tar xzf - -C /opt/APP_NAME --strip-components=1'`.
+3. Build, tag, and push on the server, with `TAG` set to the current date and time as digits: `ssh -n -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'docker build -t 127.0.0.1:5000/APP_NAME:TAG /opt/APP_NAME && docker push 127.0.0.1:5000/APP_NAME:TAG'`. If it fails, show the user the last lines and stop.
+4. Call `update_app` with `app_id` and body `{"image":"127.0.0.1:5000/APP_NAME:TAG"}`. Run the wait procedure, accepting either `AVAILABLE` or an HTTP 200 from `https://APP_DOMAIN/` in place of the health check.
+5. If the app still serves `/health`, run step 10.1; if it still serves `/api/roast`, run step 10.2. A route the user removed is not a failure.
+6. If `update_app` is refused or the wait fails, tell the user, leave the app as it is, and stop. Do not start app containers outside the panel.
 
 ## Other later requests
 
-- Change environment or image: `update_app` with `app_id`, then the wait procedure, then step 10.1.
+- Change the environment: `update_app` with `app_id` and the full `environment` object (all four variables, including the key from the user's message), then the wait procedure, then step 10.1.
 - Restart: `app_restart` with `app_id`. Logs: `get_app_logs` with `app_id`, redact the key before showing.
 - Never delete or power off an instance you did not create in this session. Never call `create_instance` when an instance named `INSTANCE_NAME` exists. Never run the step 9 recovery outside step 9.
