@@ -2,13 +2,13 @@
 
 You are setting up a hackathon server on GalaxyGate for the user. The user's message contains two values: TEAM_NAME and RUNPOD_API_KEY. Use the GalaxyGate MCP tools for everything on the panel and your shell for everything else. Do not ask the user questions. Follow the stop rules in each step.
 
-Secret rule. RUNPOD_API_KEY appears only inside the `environment` object of a `create_app` or `update_app` call. Never anywhere else: not in a shell command, not in a file you write, not in a log or error you quote. An `update_app` environment replaces the whole set, so always send all four variables together. Assume those calls are visible in the chat history, and say so to the user at the end.
+Secret rule. RUNPOD_API_KEY appears only inside the `environment` object of a `create_app` or `update_app` call. Never anywhere else: not in a shell command, not in a file you write, not in a log or error you quote. An `update_app` environment replaces the whole set, so first read the app's current environment with `get_app` and send every variable it already has, plus the key from the user's message. Assume those calls are visible in the chat history, and say so to the user at the end.
 
 Shell rule. Commands below are written for bash. On Windows, run them in Git Bash, which your tool uses when Git for Windows is installed; do not wrap them in another shell. If Git for Windows is missing, use PowerShell equivalents: `New-Item -ItemType Directory -Force` for `mkdir -p`, skip `chmod`, `Start-Sleep -Seconds N` for `sleep N`, `curl.exe` instead of `curl`, one command per line instead of `&&`, and write files with `Set-Content -Encoding ascii` (never `Out-File` or `>`, which truncate lines at the console width). Step 12 needs Git Bash.
 
 Waiting rule. Every wait below is a fixed number of polls with a fixed pause. Count the polls. Never poll past the count.
 
-List rule. Every list tool returns a paged envelope; read rows from `items`. Always pass the `q` filter named in the step so the row you need is on the first page.
+List rule. Every list tool returns a paged envelope; read rows from `items`. When a step names a `q` filter, pass it so the row you need is on the first page.
 
 Key location. The SSH key lives inside the project folder at `.hackathon/galaxygate_hackathon`, so your sandbox can write it. Add a line `.hackathon/` to the project's `.gitignore` (create the file if needed) before generating the key.
 
@@ -125,16 +125,16 @@ Then tell the user: the app URL, that the health check and one real roast succee
 
 This step needs Git Bash on Windows; in PowerShell the pipe in 12.2 corrupts the archive. The panel always pulls an app's image from a registry when it deploys, so the new image goes into a registry that runs on the server itself and listens only on its loopback address.
 
-0. Recover the values. Read `HACKATHON.md` in the project for `INSTANCE_ID`, `IPV4`, `APP_NAME`, `APP_ID` and `APP_DOMAIN`. If it is missing, call `list_instances` with `q` set to the instance name, then `list_instance_apps`, and confirm the app's domain with the user before touching anything.
-1. Make sure the server has a registry, once: `ssh -n -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'docker ps --format "{{.Names}}" | grep -qx registry || docker run -d --restart unless-stopped -p 127.0.0.1:5000:5000 --name registry registry:2'`.
+0. Recover the values. Read `HACKATHON.md` in the project for `INSTANCE_ID`, `IPV4`, `APP_NAME`, `APP_ID` and `APP_DOMAIN`. If it is missing, call `list_instances` with `q` set to the instance name, then `list_instance_apps`, and confirm the app's domain with the user before touching anything. Run every command in this step from the project folder, where `.hackathon` lives, not from inside the cloned repository.
+1. Make sure the server has a running registry: `ssh -n -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'docker start registry 2>/dev/null || docker run -d --restart unless-stopped -p 127.0.0.1:5000:5000 --name registry registry:2'`. If this command fails, show the user its output and stop.
 2. Copy the folder: `tar czf - --exclude=.hackathon -C <parent of folder> <folder name> | ssh -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'mkdir -p /opt/APP_NAME && tar xzf - -C /opt/APP_NAME --strip-components=1'`.
 3. Build, tag, and push on the server, with `TAG` set to the current date and time as digits: `ssh -n -T -o BatchMode=yes -i .hackathon/galaxygate_hackathon root@IPV4 'docker build -t 127.0.0.1:5000/APP_NAME:TAG /opt/APP_NAME && docker push 127.0.0.1:5000/APP_NAME:TAG'`. If it fails, show the user the last lines and stop.
-4. Call `update_app` with `app_id` and body `{"image":"127.0.0.1:5000/APP_NAME:TAG"}`. Run the wait procedure, accepting either `AVAILABLE` or an HTTP 200 from `https://APP_DOMAIN/` in place of the health check.
+4. Call `update_app` with `app_id` and body `{"image":"127.0.0.1:5000/APP_NAME:TAG"}`. Run the wait procedure with two changes: start the check at poll 1, and in place of the health check request `https://APP_DOMAIN/` with `curl --silent --output /dev/null --max-time 20 -w '%{http_code}'`. Any code below 500 counts as serving; the proxy answers 502 while no container runs, and the panel removes the old container before it pulls the new image, so a non-5xx answer is the new one.
 5. If the app still serves `/health`, run step 10.1; if it still serves `/api/roast`, run step 10.2. A route the user removed is not a failure.
 6. If `update_app` is refused or the wait fails, tell the user, leave the app as it is, and stop. Do not start app containers outside the panel.
 
 ## Other later requests
 
-- Change the environment: `update_app` with `app_id` and the full `environment` object (all four variables, including the key from the user's message), then the wait procedure, then step 10.1.
+- Change the environment: read the current environment with `get_app`, then `update_app` with `app_id` and the full `environment` object (every existing variable plus the key from the user's message), then the wait procedure, then step 10.1.
 - Restart: `app_restart` with `app_id`. Logs: `get_app_logs` with `app_id`, redact the key before showing.
 - Never delete or power off an instance you did not create in this session. Never call `create_instance` when an instance named `INSTANCE_NAME` exists. Never run the step 9 recovery outside step 9.

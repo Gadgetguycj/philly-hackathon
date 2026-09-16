@@ -115,7 +115,7 @@ Your app, its data, and your RunPod key live on your GalaxyGate server. Your app
 
 ### Change the demo, or start your own app
 
-The demo running on your server is `demos/roast` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone my fork of philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos.
+The demo running on your server is `demos/roast` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone my fork of philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos. As shipped, the demo forgets its roast when the page reloads; keeping results across a reload is worth 5 scoring points.
 
 To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for demos/roast.` The agent copies the folder to your server over SSH, builds the image there into a registry that runs on the server, and switches the app to it. On Windows this needs Git for Windows. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
 
@@ -127,7 +127,7 @@ Your own Hugging Face model. Tell your agent: `Using the RunPod MCP, call list-e
 
 ### Spending
 
-The demo app caps itself at 25 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. The roast demo also makes two GitHub API calls per roast, and GitHub allows 60 per hour per server without a token; if you need more, ask your agent to add a `GITHUB_TOKEN` environment variable holding a fine-grained GitHub token with public read access. Check your RunPod balance in the console before you submit.
+The demo app caps itself at 25 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. The roast demo also makes two GitHub API calls per roast, and GitHub allows 60 per hour per server without a token; if you need more, ask your agent to add a `GITHUB_TOKEN` environment variable holding a fine-grained GitHub token with public read access, keeping every existing variable. Check your RunPod balance in the console before you submit.
 
 ## Part 3. Submit
 
@@ -140,7 +140,7 @@ The demo app caps itself at 25 generations per hour so a stranger cannot drain y
 
 Submit at https://coffee-and-code-agent.devpost.com/ before the deadline shown there, and select the GalaxyGate prize. Alongside the standard fields, give judges:
 
-- Your app URL, GalaxyGate instance id and app id (all in `HACKATHON.md`), your workflow history (ask your agent to print `list_workspace_workflows`, or screenshot the Workflows page in the panel), and one exact input to try.
+- Your app URL, GalaxyGate instance id and app id (all in `HACKATHON.md`), a screenshot of your workspace's Workflows page in the panel, and one exact input to try.
 - Your RunPod endpoint id, or the public model you used, plus one request record: a screenshot of the request in your RunPod console, or the `id` field from one RunPod response.
 - Your repository, the commit you started from, the commit you submitted, and a short list of what you changed or built.
 - A video under three minutes and a README that lets a stranger run it. Check both open in a browser where you are signed out.
@@ -151,7 +151,7 @@ Do not include environment screens, API keys, private keys, or credit links in a
 
 - **Live app, 20.** The URL opens (5), a judge's fresh input succeeds (10), and the same result is still on screen after the judge reloads the page (5).
 - **RunPod integration, 20.** A judge's fresh input produces a request visible in your RunPod console or a RunPod response `id` you show the judge (10), and your app visibly uses the model's result (10).
-- **Agent-operated infrastructure, 15.** Your GalaxyGate workflow history shows an `instance.provision` (5), an `app.provision` (5), and one later app update or restart workflow (5), each started inside the build period. Your agent prints it with the `list_workspace_workflows` tool, and the panel shows it on the Workflows page.
+- **Agent-operated infrastructure, 15.** Your GalaxyGate workflow history shows an `instance.provision` (5), an `app.provision` (5), and one later `app.deploy` or `app.power` workflow (5), each started inside the build period. The panel shows them on your workspace's Workflows page; screenshot it. Your agent can also print them with `list_workspace_workflows`, and if a row has scrolled off, with `panel_request` GET `/v1/workspaces/<id>/workflows` and params `{"name": "instance.provision"}`.
 - **Agentic usefulness, 25.** A stated user task with a clear success condition (5), a page or log the judge can open that shows each model decision and each tool result and grows when the judge submits their own input (10), success on that judge-supplied input (5), and one honestly demonstrated limitation (5). A single fixed model call earns no action points.
 - **Reliability, safety, cost, 15.** Secrets kept out of the repository, logs, and screenshots (5), paid routes protected by a cap or login (5), a slow start or upstream error handled visibly (5).
 - **Submission, 5.** Video (2), README (2), the disclosures above (1).
