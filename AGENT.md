@@ -79,7 +79,20 @@ for i in $(seq 1 35); do test -f /opt/hackathon-prepare.done && exit 0; test -f 
    - `COMPLETED`: the build is done. Go to step 6.
    - `FAILED` with `duration` 25 seconds or more, or 25 seconds or more on your own clock between the `install_recipe` call and the poll that returned `FAILED`: the build is still running. Pause 20 seconds and install `CHECK_RECIPE` again. Do this at most 24 times in total.
    - `FAILED` with `duration` under 25 seconds by both measures: the build failed. Stop and tell the user the server could not build the demo, that the log is `/var/log/hackathon-prepare.log` on the server, and that the GalaxyGate table can read it by opening the server's console from the panel. Give them `INSTANCE_ID` in the same message.
+   - After every fourth check that came back as still running, install the liveness recipe below once. `COMPLETED` means the build wrote to its log in the last five minutes; carry on. `FAILED` means the build never started or died without a marker: install the unlock recipe below once, then install the prepare recipe from item 1 again, and continue the checks. Do this relaunch at most once in the whole run.
    - After 24 checks with no `COMPLETED`, stop and tell the user the build did not finish in time.
+
+5. Liveness and unlock recipes, created only when item 4 needs them. `hk-alive-RUN`, description `Build liveness`, command script:
+
+```
+test -f /var/log/hackathon-prepare.log && find /var/log/hackathon-prepare.log -mmin -5 | grep -q .
+```
+
+`hk-unlock-RUN`, description `Build unlock`, command script:
+
+```
+rmdir /opt/hackathon-prepare.lock 2>/dev/null || true
+```
 
 ## 6. Create the GPU endpoint on RunPod and start warming it
 
@@ -127,7 +140,7 @@ Call `create_app` with `instance_id` and this body. Substitute the real values; 
 
 Record `resource.id` as `APP_ID` and `workflow.id` as `APP_WORKFLOW`.
 
-If `create_app` returns an error whose text contains `409` and mentions the name, an app called `APP_NAME` already exists elsewhere in this workspace: go to step 9 item 3. If it contains `409` and mentions the domain, go back to step 7's name check and take the next suffix. If it contains `400` and mentions a host port, go to step 9 item 3. Any other error: stop and report it.
+If `create_app` errors with a timeout or with no status code, the app may still have been created: call `list_instance_apps` with `instance_id`, and if a row named `APP_NAME` is there, record its `id` as `APP_ID`, leave `APP_WORKFLOW` unset, and go to step 9; if no row is there, call `create_app` once more. If `create_app` returns an error whose text contains `409` and mentions the name, an app called `APP_NAME` already exists elsewhere in this workspace: go to step 9 item 3. If it contains `409` and mentions the domain, go back to step 7's name check and take the next suffix. If it contains `400` and mentions a host port, go to step 9 item 3. Any other error: stop and report it.
 
 ## 9. Wait for the app, and recover once if the first deploy sticks
 
@@ -143,7 +156,7 @@ Recovery, at most once in this whole run:
 ## 10. Prove it works
 
 1. Health. `curl --fail --silent --show-error --connect-timeout 10 --max-time 30 https://APP_DOMAIN/health` passes when it prints JSON containing `"status":"ok"`, `"runpod_key_set":true` and `"model_configured":true`. When this step is reached outside the wait procedure, try it at most 12 times, pausing 15 seconds, and after 12 failures call `get_app_logs` with `app_id` and tail 100; if that errors, call `get_app` and report its `state`, `locked` and `container_id` instead. Show the user whichever you got, with the key redacted, and stop.
-2. Warm model. Call `get-job-status` with `endpointId` `ENDPOINT_ID` and `jobId` `WARM_JOB`. Poll at most 40 times, pausing 30 seconds, until `status` is `COMPLETED` or `FAILED`. If `COMPLETED`, read the job's `output`: an object containing `error`, or a list whose first item is such an object, means the worker ran but the model did not; show that `error.message`, tell the user the GPU endpoint could not start the model, and stop. Otherwise the model is warm. If `status` is `FAILED`, show the job's error to the user; if it mentions balance or credit, say the RunPod credit is not applied; stop. After 40 polls, tell the user the model is still downloading and to retry the generation check later; stop.
+2. Warm model. Call `get-job-status` with `endpointId` `ENDPOINT_ID` and `jobId` `WARM_JOB`. Poll at most 40 times, pausing 30 seconds, until `status` is `COMPLETED` or `FAILED`. If `COMPLETED`, read the job's `output`: an object containing `error`, or a list whose first item is such an object, means the worker ran but the model did not; show that `error.message`, tell the user the GPU endpoint could not start the model, and stop. Otherwise the model is warm. If `status` is `FAILED`, `CANCELLED` or `TIMED_OUT`, show the job's error to the user; if it mentions balance or credit, say the RunPod credit is not applied; otherwise submit the `run-endpoint` call from step 6.3 once more and poll it the same way, and stop if that also does not complete. After 40 polls, tell the user the model is still downloading and to retry the generation check later; stop.
 3. Real generation. Download the sample sketch: `curl --fail --silent --show-error -o sample-sketch.jpg https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/demos/sketch/samples/sketch.jpg`. Then `curl --silent --show-error --max-time 900 -w '\nHTTP:%{http_code}\n' -F "image=@sample-sketch.jpg" -F "notes=A landing page with a header, a hero, three cards, and a footer." https://APP_DOMAIN/api/sketch`. Expected: JSON with `"url"` and `HTTP:200`. A `200` whose JSON has `detail` and no `url` is a failure; show the `detail` text. Then `curl --fail --silent --show-error --max-time 30 https://APP_DOMAIN<url>` must return HTML. If the response mentions 401, tell the user the key was not substituted or is wrong, and stop. If it mentions 402, tell the user their RunPod credit is exhausted, and stop. If it mentions an hourly limit, report the cap and stop. If it times out, or mentions 502, 503, 504, 520, 522 or 524, pause 120 seconds and run this item exactly once more; if that also fails, tell the user the page was probably built but the connection was cut while the model was writing, ask them to open `https://APP_DOMAIN/sites` and look for a new page there, and stop.
 4. Tell the user the URL to open on their phone and laptop. Do not open it yourself.
 
@@ -190,7 +203,7 @@ rm -f /opt/hackathon-build.done /opt/hackathon-build.failed
 nohup sh -c 'if sh /opt/hackathon-build.sh > /var/log/hackathon-build.log 2>&1; then touch /opt/hackathon-build.done; else touch /opt/hackathon-build.failed; fi; rmdir /opt/hackathon-build.lock' > /dev/null 2>&1 &
 ```
 
-2. Call `create_recipe` with name `hk-bcheck-RUN`, description `Build check`, and this exact command script. Install it and read its workflow the way step 5.4 does: `COMPLETED` means built; `FAILED` after 25 seconds or more means still building, so pause 20 seconds and install again, at most 24 times; `FAILED` in under 25 seconds means the build failed, so tell the user the build failed on the server, that the log is `/var/log/hackathon-build.log`, and that the GalaxyGate table can read it from the server's console in the panel, and stop.
+2. Call `create_recipe` with name `hk-bcheck-RUN`, description `Build check`, and this exact command script. Install it and read its workflow the way step 5.4 does: `COMPLETED` means built; `FAILED` after 25 seconds or more means still building, so pause 20 seconds and install again, at most 24 times; `FAILED` in under 25 seconds means the build failed, so tell the user the build failed on the server, that the log is `/var/log/hackathon-build.log`, and that the GalaxyGate table can read it from the server's console in the panel, and stop. After every fourth still-building result, run the liveness and unlock recipes from step 5.5 with `hackathon-build` in place of `hackathon-prepare` in both scripts and names `hk-balive-RUN` and `hk-bunlock-RUN`; a `FAILED` liveness means relaunch item 1 once, as step 5.4 does.
 
 ```
 for i in $(seq 1 35); do test -f /opt/hackathon-build.done && exit 0; test -f /opt/hackathon-build.failed && exit 1; sleep 1; done; exit 1
