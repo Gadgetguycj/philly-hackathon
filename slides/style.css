@@ -1,0 +1,188 @@
+/* ---------- bundled faces ---------- */
+@font-face {
+  font-family: 'Deck Sans';
+  src: url('/fonts/Inter.woff2') format('woff2');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: block;
+}
+@font-face {
+  font-family: 'Deck Mono';
+  src: url('/fonts/JetBrainsMono.woff2') format('woff2');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: block;
+}
+
+/* ---------- tokens ---------- */
+:root {
+  --accent: #e0399e;
+  --bg: #0b1020;
+  --fg: #e6e9f2;
+  --rule: rgba(224, 57, 158, 0.55);
+  --line: rgba(255, 255, 255, 0.18);
+  --sans: 'Deck Sans', system-ui, sans-serif;
+  --mono: 'Deck Mono', 'DejaVu Sans Mono', ui-monospace, monospace;
+}
+
+html, body, #app { background: var(--bg); }
+
+/* ---------- slide frame ---------- */
+.slidev-layout {
+  position: relative;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  padding: 30px 46px 40px;
+  hyphens: none;
+}
+.slidev-layout.default { display: flex; flex-direction: column; }
+
+.slidev-layout h1 {
+  font-family: var(--sans);
+  color: var(--fg);
+  font-size: 31px;
+  line-height: 1.15;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0 0 10px;
+  padding-bottom: 7px;
+  border-bottom: 1px solid var(--rule);
+}
+.slidev-layout a { color: inherit; border-bottom: none; text-decoration: none; white-space: nowrap; }
+
+/* ---------- body: one start position, two sizes ---------- */
+.body {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding-top: 14px;
+  gap: 14px;
+  font-size: 22px;
+}
+.body.sm { font-size: 18px; gap: 11px; padding-top: 14px; }
+
+.body ul, .body ol { margin: 0; padding: 0; list-style: none; counter-reset: n; }
+.body li {
+  position: relative;
+  line-height: 1.4;
+  margin: 0 0 13px;
+  padding-left: 24px;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+.body.sm li { margin-bottom: 9px; }
+.body li:last-child { margin-bottom: 0; }
+.body ul li::before {
+  content: "";
+  position: absolute;
+  left: 0; top: 0.6em;
+  width: 11px; height: 2px;
+  background: var(--accent);
+}
+.body ol li::before {
+  counter-increment: n;
+  content: counter(n) ".";
+  position: absolute;
+  left: 0; top: 0;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+.body strong { color: var(--fg); font-weight: 700; }
+
+.slidev-layout .cap {
+  margin: 0;
+  line-height: 1.4;
+  overflow-wrap: break-word;
+  text-wrap: pretty;
+}
+
+/* ---------- code ---------- */
+:not(pre) > code {
+  font-family: var(--mono);
+  font-feature-settings: "liga" 0, "calt" 0;
+  color: var(--fg);
+  background: rgba(255, 255, 255, 0.09);
+  border-radius: 3px;
+  padding: 1px 4px;
+  margin-left: -2px;
+  margin-right: -4px;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+/* hand-written code blocks: only spaces break, so no identifier splits at a hyphen */
+.slidev-layout pre.code {
+  font-family: var(--mono);
+  font-size: 21px;
+  line-height: 1.4;
+  letter-spacing: .02em;
+  font-feature-settings: "liga" 0, "calt" 0;
+  color: #ddd6c8;
+  background: #121a33;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 13px 16px;
+  margin: 0;
+  white-space: normal;
+  overflow: visible;
+}
+.slidev-layout pre.code .l {
+  display: block;
+  min-height: 1.4em;
+  white-space: pre-wrap;
+  padding-left: 2.4ch;
+  text-indent: -2.4ch;
+}
+.nb { white-space: nowrap; }
+/* one paste block holds a URL too long for 21px; it gets its own size */
+.slidev-layout pre.code.tight { font-size: 17px; }
+.slidev-layout pre.code.tighter { font-size: 15.5px; }
+
+/* ---------- screenshots ---------- */
+.shotwrap {
+  flex: 0 1 auto;
+  min-height: 0;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+}
+.shot {
+  max-width: 100%;
+  max-height: 100%;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 3px;
+}
+
+/* ---------- slide number, from Slidev's own counter ---------- */
+.deck-num {
+  position: absolute;
+  right: 46px;
+  bottom: 14px;
+  z-index: 10;
+  font-family: var(--sans);
+  font-size: 16px;
+  color: #8d95b0;
+  font-variant-numeric: tabular-nums;
+}
+.slidev-page[data-slidev-no="1"] .deck-num { display: none; }
+
+/* ---------- cover QR: dark modules on a white card ---------- */
+.cover { display: flex; align-items: center; gap: 36px; height: 100%; }
+.cover-text { flex: 1 1 auto; min-width: 0; }
+.cover-text h1 {
+  font-size: 42px; line-height: 1.12; font-weight: 600;
+  border-bottom: none; margin: 0 0 18px; padding: 0; letter-spacing: -0.01em;
+}
+.cover-text .sub { font-size: 17px; color: #aab0c4; margin: 0 0 12px; }
+.cover-text .url { font-size: 21px; color: #e6e9f2; margin: 0; white-space: nowrap; }
+.qr-tile {
+  flex: 0 0 auto;
+  background: #ffffff;
+  padding: 20px;
+  border-radius: 6px;
+}
+.qr-tile img { width: 290px; height: 290px; display: block; }
