@@ -18,7 +18,7 @@ How to open a terminal in that folder, when a step says to:
 Pick one tool. If you have none, pick Cursor.
 
 - **Cursor.** Download from https://cursor.com/downloads, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
-- **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon`, run `node --version`. If it prints anything other than a version number, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @anthropic-ai/claude-code`, then `claude`, and sign in when it asks.
+- **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon`, run `node --version`. If it prints anything other than a version number of v20 or higher, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @anthropic-ai/claude-code`, then `claude`, and sign in when it asks.
 - **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. Check Node.js the same way. Then run `npm install -g @openai/codex`, then `codex`, and sign in when it asks.
 
 Terminal commands in this guide are typed in a terminal. Prompts are pasted into the tool's chat.
@@ -78,7 +78,7 @@ Codex blocks network access inside its sandbox by default, and the setup prompt 
 codex --sandbox workspace-write -c sandbox_workspace_write.network_access=true
 ```
 
-Approve the requests it shows you; do not turn the sandbox off.
+Codex will ask permission the first time the agent writes the SSH key and connects to your server; approve those requests. Do not turn the sandbox off.
 
 **Check.** Paste this into your tool: `Call the GalaxyGate list_workspaces tool and the RunPod list-endpoints tool and show me both results.` You should see one GalaxyGate workspace with your name on it, and a RunPod endpoint list, which may be empty. If either call is denied, redo the sign-in for that server.
 
@@ -90,7 +90,7 @@ macOS and Linux already have SSH.
 
 ### 6. Create your server
 
-Replace `yourteam` with your team name: 3 to 32 characters, lowercase letters, digits, and hyphens only. Replace the key. Then paste the whole block into your tool.
+Replace `yourteam` with your team name: 3 to 32 characters, lowercase letters, digits, and hyphens only, starting and ending with a letter or digit. Replace the key. Then paste the whole block into your tool.
 
 ```text
 TEAM_NAME=yourteam
@@ -105,7 +105,7 @@ The agent creates an SSH key, uploads it to your GalaxyGate workspace, creates y
 
 Done when the agent reports that both checks passed and gives you your URL, and that URL opens in your browser and roasts a public GitHub repository when you paste one.
 
-Your RunPod key is now in your agent's chat history and in the app's environment on your server, where anyone in your GalaxyGate workspace can see it. Keep the workspace to your team and revoke the key after the event.
+Your RunPod key is now in your agent's chat history and in the app's environment on your server, where anyone in your GalaxyGate workspace can see it. Keep the workspace to your team and revoke the key after the event. Your SSH key is in the `.hackathon` folder inside your project; it is listed in `.gitignore`, so it stays out of your repository.
 
 ## Part 2. Build
 
@@ -127,7 +127,7 @@ Your own Hugging Face model. Tell your agent: `Using the RunPod MCP, call list-e
 
 ### Spending
 
-The demo app caps itself at 30 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. Check your RunPod balance in the console before you submit.
+The demo app caps itself at 25 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. The roast demo also makes two GitHub API calls per roast, and GitHub allows 60 per hour per server without a token; if you need more, ask your agent to add a `GITHUB_TOKEN` environment variable holding a fine-grained GitHub token with public read access. Check your RunPod balance in the console before you submit.
 
 ## Part 3. Submit
 
@@ -140,7 +140,7 @@ The demo app caps itself at 30 generations per hour so a stranger cannot drain y
 
 Submit at https://coffee-and-code-agent.devpost.com/ before the deadline shown there, and select the GalaxyGate prize. Alongside the standard fields, give judges:
 
-- Your app URL, GalaxyGate instance id and app id (all in `HACKATHON.md`), and one exact input to try.
+- Your app URL, GalaxyGate instance id and app id (all in `HACKATHON.md`), a screenshot of your GalaxyGate workspace activity log, and one exact input to try.
 - Your RunPod endpoint id, or the public model you used, plus one request record: a screenshot of the request in your RunPod console or a redacted response.
 - Your repository, the commit you started from, the commit you submitted, and a short list of what you changed or built.
 - A video under three minutes and a README that lets a stranger run it. Check both open in a browser where you are signed out.
@@ -151,7 +151,7 @@ Do not include environment screens, API keys, private keys, or credit links in a
 
 - **Live app, 20.** The URL opens (5), a judge's fresh input succeeds (10), and the result is still reachable afterwards (5).
 - **RunPod integration, 20.** A judge's fresh input produces a matching request in your RunPod console or a redacted response (10), and your app visibly uses the model's result (10).
-- **Agent-operated infrastructure, 15.** Redacted tool-call records show your agent creating the server (5), deploying the app (5), and making one later update or restart (5).
+- **Agent-operated infrastructure, 15.** Your GalaxyGate workspace activity log shows the server created (5), the app deployed (5), and one later app update or restart (5), each inside the build period. Judges read the activity log in the panel with you at the table or from your screenshot of it.
 - **Agentic usefulness, 25.** A stated user task with a clear success condition (5), a trace showing the model choosing actions and using their results (10), success on a judge-supplied input (5), and one honestly demonstrated limitation (5). A single fixed model call earns no action points.
 - **Reliability, safety, cost, 15.** Secrets kept out of the repository, logs, and screenshots (5), paid routes protected by a cap or login (5), a slow start or upstream error handled visibly (5).
 - **Submission, 5.** Video (2), README (2), the disclosures above (1).
@@ -163,7 +163,7 @@ Ties break on agentic usefulness, then reliability. If your app is down when jud
 - **An MCP server shows Needs login or a tool call is denied.** Redo that server's sign-in: Cursor in Customize, MCP; Claude Code with `/mcp`; Codex with `codex mcp login <name>`.
 - **The agent says the server never became ready.** Ask it to run `get_instance` and show the state, and `cloud-init status --long` over SSH. Bring both to the GalaxyGate table.
 - **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow message and bring it to the table.
-- **The roast answers 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment.
+- **The roast shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment.
 - **RunPod answers 402.** Your credit is gone. Check the console.
 - **A generation hangs.** Ask the agent to read the app logs and, for your own endpoint, the endpoint's workers in the RunPod console. Do not resend the same request repeatedly.
 
