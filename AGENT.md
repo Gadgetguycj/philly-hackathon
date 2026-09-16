@@ -4,7 +4,7 @@ You are setting up a hackathon server on GalaxyGate for the user. The user's mes
 
 Secret rule. You send RUNPOD_API_KEY only inside the `environment` object of a `create_app` or `update_app` call, and you never write it into a shell command, a file, or a message of your own. Tool results from `get_app` contain the environment in plain text; never quote such a result except its `state`, `locked` and `container_id` fields, and when you need the current environment for `update_app`, copy it from the `get_app` result into the call without showing it. An `update_app` environment replaces the whole set, so send every variable the app already has plus the key. Tell the user at the end that the key is visible in this chat's tool calls.
 
-Shell rule. Commands below are written for bash. Run `echo $PSVersionTable.PSVersion.Major` once. If it prints a number, you are in PowerShell. If it prints nothing or errors, you are in bash: run every command directly and ignore the rest of this rule. Run every command in this document with the same tool that answered that probe. In PowerShell, create the folder once with `New-Item -ItemType Directory -Force .hackathon | Out-Null`, then run every bash command in this document through a file, never retyped as PowerShell. Repeat all four lines every time, because your shell does not remember variables between commands, and keep the closing `'@` at the left margin:
+Shell rule. Commands below are written for bash. Run `echo $PSVersionTable.PSVersion.Major` once. If it prints a bare number, you are in PowerShell. If it prints `.PSVersion.Major` or errors, you are in bash: run every command directly and ignore the rest of this rule. Run every command in this document with the same tool that answered that probe. In PowerShell, create the folder once with `New-Item -ItemType Directory -Force .hackathon | Out-Null`, then run every bash command in this document through a file, never retyped as PowerShell. Repeat all four lines every time, because your shell does not remember variables between commands, and keep the closing `'@` at the left margin:
 
 ```powershell
 $bash = Join-Path (Split-Path (Split-Path (Get-Command git).Source)) 'bin\bash.exe'
@@ -75,7 +75,7 @@ Set `SUBDOMAIN=TEAM_NAME` and `APP_DOMAIN=SUBDOMAIN.galaxygate.app`. Call `panel
 - If `-9` is also taken, stop and ask the user for a different team name.
 - Any other error: stop and report it.
 
-## The wait procedure, used by steps 8 and 9, and adapted in step 12
+## The wait procedure, used by steps 8 and 9
 
 Given an `app_id` and its `APP_DOMAIN`: poll `get_app` at most 32 times, pausing 15 seconds between polls. From poll 4 onward, before each poll, run the health check from step 10.1 once. The wait succeeds at the first poll where `state` is `AVAILABLE` or the health check passes; the panel can report `PENDING` long after the container is serving. The wait fails if `state` becomes `FAILED`, or after poll 32 with neither condition met. The wait never deletes or creates anything.
 
@@ -87,7 +87,7 @@ Otherwise call `create_app` with `instance_id` and this body. Substitute the rea
 
 ```json
 {
-  "name": "roast",
+  "name": "APP_NAME",
   "image": "ghcr.io/galaxygate/philly-hackathon-roast:latest",
   "ports": [{"host_port": 8000, "container_port": 8000, "protocol": "TCP", "http": true}],
   "environment": {
@@ -146,6 +146,6 @@ The panel always pulls an app's image from a registry when it deploys, so the ne
 
 ## Other later requests
 
-- Change the environment: read the current environment with `get_app`, then `update_app` with `app_id` and the full `environment` object (every existing variable plus the key from the user's message), then the wait procedure, then step 10.1.
+- Change the environment: read the current environment with `get_app`, then `update_app` with `app_id` and the full `environment` object (every existing variable, changed or added as the user asked, copied without showing it), then the wait procedure, then step 10.1.
 - Restart: `app_restart` with `app_id`. Logs: `get_app_logs` with `app_id`, redact the key before showing.
 - Never delete or power off an instance you did not create in this session. Never call `create_instance` when an instance named `INSTANCE_NAME` exists. Never run the step 9 recovery outside step 9.
