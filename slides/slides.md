@@ -3,6 +3,8 @@ theme: default
 colorSchema: dark
 title: GalaxyGate + RunPod track
 aspectRatio: 16/9
+fonts:
+  provider: none
 ---
 
 <div class="cover">
@@ -10,7 +12,7 @@ aspectRatio: 16/9
 
 # GalaxyGate + RunPod track
 
-<p class="sub">Scan for the guide</p>
+<p class="sub">Scan for the guide, or open the repository</p>
 <p class="url">https://github.com/GalaxyGate/philly-hackathon</p>
 <p class="url2">Coffee &amp; Code AI Agent Hackathon</p>
 
@@ -25,11 +27,10 @@ aspectRatio: 16/9
 <div class="body sm">
 
 - A laptop, a GitHub account, and an email inbox you can open now.
-- One teammate does Part 1 and shares the URL and repository with the rest.
-- **Cursor.** Desktop from https://cursor.com/download, or web at https://cursor.com/agents with a paid plan. Redeem a Cursor credit card from our table first.
-- **Claude Code.** Desktop app or terminal, or web at https://claude.ai/code on a repository of yours.
-- **Codex.** Terminal, opened in that folder; step 4 is written for the terminal. Codex on the web cannot connect MCP servers.
-- Work in an empty folder named `hackathon`.
+- If you are a team, one teammate does Part 1 and shares the resulting URL and repository with the others.
+- **Cursor.** Desktop: download from https://cursor.com/download, sign in, then File, Open Folder, and choose a new empty folder named `hackathon`, created on your Desktop first. Web: open https://cursor.com/agents; cloud agents need a paid Cursor plan. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card first.
+- **Claude Code.** Desktop app or terminal, opened in an empty folder named `hackathon`. Web: https://claude.ai/code, connected to a GitHub repository of yours; any empty repository works.
+- **Codex.** Terminal, opened in an empty folder named `hackathon`; step 4 is written for the terminal. Codex on the web cannot connect MCP servers.
 
 <p class="cap">If you have none of these, use Cursor.</p>
 
@@ -55,21 +56,21 @@ aspectRatio: 16/9
 
 # Step 3. RunPod account and one API key
 
-<div class="body sm">
+<div class="body">
 
 1. Sign up at https://console.runpod.io/signup.
-2. Open the RunPod credit link from your check-in email, redeem it, and check the balance.
+2. Open the RunPod credit link from your check-in email and redeem it. Your balance should read $15.
 3. Settings, API Keys, Create API Key. Name it `hackathon-app`, permission `All`, and copy it now. RunPod shows it once. It goes into the prompt in step 5.
 
-<p class="cap">The key lives in your app’s environment on your server, never in your code or repository. It also lands in the chat history and in tool-call logs, so keep the workspace to your team.</p>
+<p class="cap">The key lives in your app’s environment on your server, never in your code or repository. It also lands in the chat history and in tool-call logs, and anyone in your GalaxyGate workspace can see it, so keep the workspace to your team.</p>
 
-<p class="cap">The agent needs <code>All</code> once, to create your endpoint. A second, narrower key for the app scores better on Secure.</p>
+<p class="cap">The agent needs <code>All</code> once, to create your endpoint. After that you can create a second key with only the permission your app needs and ask the agent to put that one in the app’s environment; the Secure score rewards this.</p>
 
 </div>
 
 ---
 
-# Cursor: MCP servers
+# Step 4. Cursor: MCP servers
 
 <div class="body sm">
 
@@ -92,14 +93,12 @@ Skip if the room has already picked a tool.
 
 ---
 
-# Cursor: sign in
+# Step 4. Cursor: sign in
 
 <div class="body">
 
-- Save, restart Cursor, open Customize, then MCP.
+- Save, restart Cursor, open Customize in the sidebar, then MCP.
 - Each server shows Needs login. Click it, approve in the browser tab, and check its toggle is on.
-- While the agent works, Cursor asks you to approve commands that reach your server. Approve them as they appear.
-- Setup has long waits, so stay at the laptop. If you walk away, Cursor stops at the first prompt and waits without saying so.
 - Web. At https://cursor.com/agents add each address as an HTTP server in the MCP dropdown, and sign in.
 
 </div>
@@ -110,16 +109,16 @@ Skip if the room has already picked a tool.
 
 ---
 
-# Claude Code: MCP servers
+# Step 4. Claude Code: MCP servers
 
 <div class="body sm">
 
 <p class="cap">Desktop or terminal. In a terminal opened in <code>hackathon</code>:</p>
 
-<pre class="code"><span class="l"><span class="nb">claude</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">--transport</span> <span class="nb">http</span> <span class="nb">--scope</span> <span class="nb">user</span> <span class="nb">galaxygate</span> <span class="nb">https://mcp.galaxygate.net/mcp</span></span>
-<span class="l"><span class="nb">claude</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">--transport</span> <span class="nb">http</span> <span class="nb">--scope</span> <span class="nb">user</span> <span class="nb">runpod</span> <span class="nb">https://mcp.getrunpod.io/</span></span></pre>
+<pre class="code tight"><span class="l"><span class="nb">claude</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">-t</span> <span class="nb">http</span> <span class="nb">galaxygate</span> <span class="nb">https://mcp.galaxygate.net/mcp</span></span>
+<span class="l"><span class="nb">claude</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">-t</span> <span class="nb">http</span> <span class="nb">runpod</span> <span class="nb">https://mcp.getrunpod.io/</span></span></pre>
 
-<p class="cap">Then start <code>claude</code>, type <code>/mcp</code>, and complete the sign-in for each server.</p>
+<p class="cap">Then start <code>claude</code> in that same folder, type <code>/mcp</code>, and complete the sign-in for each server. The servers are saved for this folder, so always start Claude Code from it.</p>
 
 <p class="cap">Web. At https://claude.ai open Customize, Connectors, Add custom connector; add each address and sign in. Then start a session on your repository at https://claude.ai/code, turn both connectors on, and set network access to Full.</p>
 
@@ -131,7 +130,7 @@ Skip if the room has already picked a tool.
 
 ---
 
-# Codex: MCP servers
+# Step 4. Codex: MCP servers
 
 <div class="body sm">
 
@@ -142,9 +141,11 @@ Skip if the room has already picked a tool.
 <span class="l"><span class="nb">codex</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">runpod</span> <span class="nb">--url</span> <span class="nb">https://mcp.getrunpod.io/</span></span>
 <span class="l"><span class="nb">codex</span> <span class="nb">mcp</span> <span class="nb">login</span> <span class="nb">runpod</span></span></pre>
 
-<p class="cap">Codex blocks network access from commands unless you allow it. Add these two lines to <code>~/.codex/config.toml</code>, creating the file if it is missing, then start <code>codex</code>:</p>
+<p class="cap">Codex blocks network access from commands unless you allow it. Add these lines to <code>~/.codex/config.toml</code>, creating the file if it is missing, then start <code>codex</code>:</p>
 
-<pre class="code"><span class="l"><span class="nb">[sandbox_workspace_write]</span></span>
+<pre class="code"><span class="l"><span class="nb">sandbox_mode</span> <span class="nb">=</span> <span class="nb">"workspace-write"</span></span>
+<span class="l"></span>
+<span class="l"><span class="nb">[sandbox_workspace_write]</span></span>
 <span class="l"><span class="nb">network_access</span> <span class="nb">=</span> <span class="nb">true</span></span></pre>
 
 </div>
@@ -193,8 +194,9 @@ Skip if the room has already picked a tool.
 
 <div class="body sm">
 
-- It creates your server, installs Docker and builds the demo on it, creates a vision-model endpoint on RunPod under your account, deploys the demo with a public name, runs one real generation, and writes `HACKATHON.md` with every id you need.
-- The build and the first generation each take a few minutes. The first generation downloads the model onto the GPU; later ones take seconds.
+- It creates your server, installs Docker and builds the demo on it, creates a vision-model endpoint on RunPod under your account, deploys the demo with a public name, runs one real generation, and writes `HACKATHON.md` in your folder with every id you will need.
+- The build and the first generation each take a few minutes. The first generation downloads the model onto the GPU and takes several minutes; later ones are much faster.
+- Stay with the laptop while this runs. Cursor, Claude Code and Codex all stop and wait for you to approve the commands that reach your own server, and none of them says anything while it waits. If you come back to a screen that has not moved, look for an approval prompt before you assume something broke.
 - Done when the agent reports the health check and one real generation passed, and your URL opens on your phone.
 
 </div>
@@ -210,6 +212,7 @@ Skip if the room has already picked a tool.
 - The proxy in front of your URL drops any response with no bytes for 100 seconds, so a slow GPU call must stream or send progress bytes. The demo does this.
 - The demo caps itself at 20 generations per hour, in `MAX_GENERATIONS_PER_HOUR`, and the cap counts every visitor together. Open `/api/usage` on your URL to see what is left, and ask your agent to raise the cap for the judging window if you used it up testing. Keep a cap in anything you build.
 - Your endpoint scales to zero, and bills for the whole time a worker runs, including the model load and the idle minute after a request.
+- The first request after a quiet period is slow while the model loads, so send one generation through your app yourself right before a judge tries it. Check your RunPod balance in the console before you submit.
 
 </div>
 
@@ -222,7 +225,7 @@ Skip if the room has already picked a tool.
 <div class="withshot">
 <div class="col">
 
-- Open your URL on your phone. Photograph a sketch on paper or a whiteboard, add a line of notes, and press Build the page.
+- Open your URL on your phone. Photograph a website sketch drawn on paper or a whiteboard, add a line of notes if you like, and press Build the page.
 - A vision model on your RunPod endpoint turns the photo into a web page. You get a link and a QR code to the live page.
 - Every page is listed at `/sites`, kept on the `/data` mount, so a redeploy keeps them.
 
@@ -234,35 +237,59 @@ Skip if the room has already picked a tool.
 
 ---
 
-# Change the demo and redeploy
+# Fork and clone
 
 <div class="body sm">
 
-<p class="cap">Fork the repository. In Cursor desktop, Claude Code desktop, or Codex:</p>
+<p class="cap">The demo on your server is <code>demos/sketch</code> in https://github.com/GalaxyGate/philly-hackathon. Fork it into your GitHub account. In Cursor desktop, Claude Code desktop, or Codex:</p>
 
 <pre class="code tight"><span class="l"><span class="nb">Clone</span> <span class="nb">https://github.com/&lt;your GitHub username&gt;/philly-hackathon</span> <span class="nb">into</span> <span class="nb">this</span> <span class="nb">folder</span> <span class="nb">and</span> <span class="nb">work</span> <span class="nb">in</span> <span class="nb">demos/sketch.</span></span></pre>
 
-<p class="cap">On Claude Code web or a Cursor cloud agent, start a session on your fork, turn both MCP connections on, and paste in <code>HACKATHON.md</code>. Edit, push, then:</p>
-
-<pre class="code tight"><span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">its</span> <span class="nb">step</span> <span class="nb">12</span> <span class="nb">for</span> <span class="nb">https://github.com/&lt;your GitHub username&gt;/philly-hackathon</span> <span class="nb">and</span> <span class="nb">folder</span> <span class="nb">demos/sketch.</span></span></pre>
-
-<p class="cap">Ask <code>Show me the app logs</code> when something is wrong, and <code>Restart the app</code> to restart it.</p>
+<p class="cap">On Claude Code web or a Cursor cloud agent, start a session on your fork, turn both MCP connections on, and paste in <code>HACKATHON.md</code>. Edit whatever you like, or add a new app folder next to the demos.</p>
 
 </div>
 
 ---
 
-# Use a GPU model
+# Redeploy your changes
 
 <div class="body sm">
 
-<p class="cap">Your endpoint <code>hackathon-vl</code> runs <code>Qwen/Qwen2.5-VL-7B-Instruct</code>. Call <code>https://api.runpod.ai/v2/&lt;ENDPOINT_ID&gt;/openai/v1/chat/completions</code> like the OpenAI chat API, with the image as an <code>image_url</code> part holding a <code>data:image/jpeg;base64,...</code> URL. Keep your timeout above two minutes.</p>
+<p class="cap">Push to your fork, then tell your agent:</p>
 
-<p class="cap">For a ready-made model with no deployment, tell your agent:</p>
+<pre class="code tight"><span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">its</span> <span class="nb">step</span> <span class="nb">12</span> <span class="nb">for</span> <span class="nb">https://github.com/&lt;your GitHub username&gt;/philly-hackathon</span> <span class="nb">and</span> <span class="nb">folder</span> <span class="nb">demos/sketch.</span></span></pre>
+
+<p class="cap">If the agent cannot find <code>HACKATHON.md</code>, paste its contents into the chat. Ask <code>Show me the app logs</code> when something is wrong, and <code>Restart the app</code> to restart it.</p>
+
+</div>
+
+---
+
+# Use a GPU model: your endpoint
+
+<div class="body">
+
+<p class="cap">Your endpoint <code>hackathon-vl</code> runs <code>Qwen/Qwen2.5-VL-7B-Instruct</code>. Call <code>https://api.runpod.ai/v2/&lt;ENDPOINT_ID&gt;/openai/v1/chat/completions</code> like the OpenAI chat API, with the image as an <code>image_url</code> part holding a <code>data:image/jpeg;base64,...</code> URL.</p>
+
+<p class="cap">Give your app’s call at least fifteen minutes, as the demo does, and stream or send progress bytes while it waits.</p>
+
+</div>
+
+<!--
+Reference only. Do not present.
+-->
+
+---
+
+# Use a GPU model: ready-made
+
+<div class="body sm">
+
+<p class="cap">No deployment. Tell your agent:</p>
 
 <pre class="code"><span class="l"><span class="nb">Add</span> <span class="nb">a</span> <span class="nb">route</span> <span class="nb">to</span> <span class="nb">my</span> <span class="nb">app</span> <span class="nb">that</span> <span class="nb">generates</span> <span class="nb">an</span> <span class="nb">image</span> <span class="nb">with</span> <span class="nb">RunPod's</span> <span class="nb">Flux</span> <span class="nb">Schnell</span> <span class="nb">public</span> <span class="nb">endpoint</span> <span class="nb">using</span> <span class="nb">the</span> <span class="nb">RUNPOD_API_KEY</span> <span class="nb">from</span> <span class="nb">the</span> <span class="nb">environment,</span> <span class="nb">saves</span> <span class="nb">the</span> <span class="nb">image</span> <span class="nb">under</span> <span class="nb">/data,</span> <span class="nb">and</span> <span class="nb">shows</span> <span class="nb">it</span> <span class="nb">on</span> <span class="nb">a</span> <span class="nb">page.</span></span></pre>
 
-<p class="cap">It posts <code>{"input":{"prompt":"...","width":768,"height":768}}</code> to <span class="nb">https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync</span> and returns <code>output.image_url</code>. More: <span class="nb">https://docs.runpod.io/public-endpoints/overview</span></p>
+<p class="cap">It posts <code>{"input":{"prompt":"...","width":768,"height":768}}</code> to <span class="nb">https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync</span> with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns <code>output.image_url</code>. More: <span class="nb">https://docs.runpod.io/public-endpoints/overview</span></p>
 
 </div>
 
@@ -274,14 +301,14 @@ Reference only. Do not present.
 
 # Required to be judged in this track
 
-<div class="body sm">
+<div class="body">
 
 - Your app runs on a GalaxyGate server created during the build period, and a judge can open it.
 - Its GPU work runs on RunPod, and a judge's own input produces a request you can show: the RunPod console entry, or the `id` from the response.
 - Starter code and RunPod's public models are allowed; say what you reused.
 - Fabricated evidence, including a faked RunPod call, removes the project from this track.
 
-<p class="cap">Both integrations are the entry ticket. They earn no points by themselves.</p>
+<p class="cap">Both integrations are the entry ticket. Having them earns nothing; how well your app uses them is what the points below measure.</p>
 
 </div>
 
@@ -289,7 +316,7 @@ Reference only. Do not present.
 
 # Submit on Devpost
 
-<div class="body sm">
+<div class="body">
 
 <p class="cap">Submit at <span class="nb">https://coffee-and-code-agent.devpost.com/</span> before the deadline shown there, select the GalaxyGate prize, and alongside the standard fields give judges:</p>
 
@@ -298,7 +325,7 @@ Reference only. Do not present.
 - Your repository, the commit you started from, the commit you submitted, and what you changed.
 - A video under three minutes and a README that lets a stranger run it. Check both open signed out.
 
-<p class="cap">Check your RunPod balance first. Do not include environment screens, API keys, private keys, or credit links.</p>
+<p class="cap">Do not include environment screens, API keys, private keys or credit links in anything you submit.</p>
 
 </div>
 
@@ -308,17 +335,21 @@ Reference only. Do not present.
 
 ---
 
-# Scoring, 100 points plus 15 extra
+# Scoring, 100 points plus up to 15 extra
 
-<div class="body sm">
+<div class="body">
 
-<p class="cap">Judges score live, on their own inputs.</p>
+<p class="cap">Judges score live, using their own inputs, not your demo input.</p>
 
-- **It works, 30.** Their first input produces the promised result (15). A second, different input also works (10). No crash, blank screen, or endless spinner (5).
-- **Simple to use, 20.** A first-timer completes the core task with no instructions (10). The screen always says what is happening (5). The README gets a stranger running in one read (5).
+- **It works, 30.** Their first input produces the promised result (15). A second, different input also works (10). Nothing in the judge's session ends in a crash, a blank screen, or a spinner that never resolves (5); an upstream failure the app reports clearly does not count against this.
+- **Simple to use, 20.** A first-timer completes the core task with no instructions (10). The screen always says what is happening: loading, GPU waking up, done, failed (5). The README gets a stranger running in one read (5).
 - **Reliable, 15.** Results survive a page reload and a second run (5). A slow start or upstream error is shown, not hidden (5). Paid routes have a cap or a login (5).
 
 </div>
+
+<!--
+Reference only. Do not present.
+-->
 
 ---
 
@@ -326,11 +357,11 @@ Reference only. Do not present.
 
 <div class="body sm">
 
-- **Secure, 15.** Secrets only in the server's environment (5). Only your server calls RunPod (5). The app's key is no broader than it needs (5); one `All` key for both setup and app scores 2 of 5.
+- **Secure, 15.** Secrets only in the server's environment, not in the repository, logs, or screenshots (5). Only your server calls RunPod (5). The app's key is no broader than it needs (5); one `All` key for both setup and app scores 2 of 5.
 - **Scalable, 10.** GPU work on an endpoint that scales to zero and can add workers (5). State outside the container, so a redeploy keeps it (5).
 - **Agentic, 10.** The app decides what to do next from model output or tools, not one fixed call (10).
-- **Extra credit, up to 15.** GalaxyGate, 5 each up to 10: a second server, private networking, a floating IP, a backup, a load balancer. RunPod, 5: a second endpoint, a network volume, or a pod.
-- **Ties.** Simple to use, then Reliable. If your app is down when judges reach you, you have the rest of the judging window to bring it back; an app that never comes back is not judged in this track. If it comes back, a timestamped recording covers only the Secure, Scalable and Agentic points.
+- **Extra credit, up to 15.** GalaxyGate, 5 each up to 10: a second server doing real work, private networking between servers, a floating IP, a scheduled backup or snapshot, or a load balancer. RunPod, 5: a second endpoint or model, a network volume, or a pod used for training or a batch job. Each must be used for a reason the judge can see.
+- **Ties.** Simple to use, then Reliable. If your app is down when judges reach you, you have the rest of the judging window to bring it back; an app that never comes back is not judged in this track. If it comes back, a timestamped end-to-end recording covers only the Secure, Scalable and Agentic points, because every other category is scored from a judge's own input.
 
 </div>
 
@@ -345,15 +376,33 @@ Reference only. Do not present.
 <div class="body sm">
 
 - **Needs login, or a tool call denied.** Redo that server's sign-in: Cursor desktop in Customize, MCP; Cursor web in the MCP dropdown; Claude Code desktop with `/mcp`; Claude Code web in Customize, Connectors; Codex with `codex mcp login <name>`.
+- **The agent stopped in the middle, or your session ended.** Paste the block from step 5 again, with the same team name and the same key, in a new chat. The instructions find the server, the endpoint and the app you already have and carry on. Do not change your team name, and do not ask the agent to delete anything first.
 - **The server never became ready.** Ask the agent to run `get_instance` and show the state.
+
+</div>
+
+<!--
+Reference only. Do not present.
+-->
+
+---
+
+# When something fails, continued
+
+<div class="body sm">
+
 - **The first deploy sticks or fails.** The instructions recover once. If it fails twice, ask for the workflow state and its failed children.
 - **An error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment, keeping every existing variable.
-- **402.** Your credit is gone. Check the console.
-- **A generation fails after a few minutes.** The first request loads the model onto the GPU. Wait two minutes, then send exactly one more.
+- **RunPod answers 402.** Your credit is gone. Check the console.
+- **A generation fails or times out after a few minutes.** The first request after a quiet period loads the model onto the GPU. Wait two minutes, then send exactly one more. If that also fails, ask the agent to read the app logs and bring the error text to the GalaxyGate table.
 
 <p class="cap">Bring your tool, your step, the ids from <code>HACKATHON.md</code>, and the error text with your key removed. Help is at the GalaxyGate table.</p>
 
 </div>
+
+<!--
+Reference only. Do not present.
+-->
 
 ---
 
@@ -367,3 +416,7 @@ Reference only. Do not present.
 - Check that no other endpoint you created still has workers running.
 
 </div>
+
+<!--
+Reference only. Do not present.
+-->

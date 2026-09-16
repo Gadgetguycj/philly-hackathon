@@ -106,9 +106,9 @@ html, body, #app { background: var(--bg); }
   color: var(--fg);
   background: rgba(255, 255, 255, 0.09);
   border-radius: 3px;
-  padding: 1px 4px;
-  margin: 0 1px;
-  font-size: 0.9em;
+  padding: 1px 3px;
+  margin: 0;
+  font-size: 19px;
   white-space: nowrap;
 }
 
@@ -137,7 +137,7 @@ html, body, #app { background: var(--bg); }
 }
 .nb { white-space: nowrap; }
 /* one paste block holds a URL too long for 21px; it gets its own size */
-.slidev-layout pre.code.tight { font-size: 17px; }
+.slidev-layout pre.code.tight { font-size: 18px; }
 
 /* ---------- screenshots ---------- */
 .shotwrap {
