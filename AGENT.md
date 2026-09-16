@@ -141,7 +141,7 @@ The panel always pulls an app's image from a registry when it deploys, so the ne
 3. Record the image the app runs now: `ssh -n -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new -i .hackathon/galaxygate_hackathon root@IPV4 'docker inspect -f "{{.Config.Image}}" APP_NAME'`; keep it as `OLD_IMAGE`. Set `TAG` from `date -u +%Y%m%d%H%M%S`. Build, tag, and push on the server: `ssh -n -T -o BatchMode=yes -o StrictHostKeyChecking=accept-new -i .hackathon/galaxygate_hackathon root@IPV4 'docker build -t 127.0.0.1:5000/APP_NAME:TAG /opt/APP_NAME && docker push 127.0.0.1:5000/APP_NAME:TAG'`. If it fails, show the user the last lines and stop.
 4. Call `update_app` with `app_id` and body `{"image":"127.0.0.1:5000/APP_NAME:TAG"}`. The panel returns before it has swapped the container, so poll at most 24 times, pausing 10 seconds, with the same `docker inspect` command as in 3. Success is when it prints exactly `127.0.0.1:5000/APP_NAME:TAG` and that differs from `OLD_IMAGE`. Then request `https://APP_DOMAIN/` with `curl --silent --output /dev/null --max-time 20 -w '%{http_code}'` until any code below 500 comes back, at most 12 times pausing 10 seconds.
 5. If the app still serves `/health`, run step 10.1; if it still serves `/api/roast`, run step 10.2. A route the user removed is not a failure.
-6. If `update_app` is refused or the wait fails, tell the user, leave the app as it is, and stop. Do not start app containers outside the panel.
+6. If `update_app` is refused, or either poll in 4 runs out, tell the user, leave the app as it is, and stop. Do not start app containers outside the panel.
 
 ## Other later requests
 
