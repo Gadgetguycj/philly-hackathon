@@ -9,6 +9,7 @@
   <section class="panel"><div>
     <h1>Draw a sticker</h1>
     <p>Enter your team name and describe the sticker you want.</p>
+    <p id="usage" class="status" aria-live="polite">Generations remaining: loading</p>
     <form id="draw-form">
       <label for="team">Team name</label><input id="team" required maxlength="80">
       <label for="prompt">Sticker prompt</label><textarea id="prompt" required maxlength="1000" rows="5"></textarea>
@@ -18,4 +19,3 @@
   </div><div class="preview"><img id="result" alt="" hidden></div></section>
 </main><script src="/static/app.js"></script></body>
 </html>
-

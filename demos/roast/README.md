@@ -7,6 +7,7 @@ This FastAPI app reads selected files from a public GitHub repository and stream
 ```sh
 cp .env.example .env
 # Add RUNPOD_API_KEY and either RUNPOD_ENDPOINT_ID or LLM_BASE_URL to .env.
+# Create the bind mount directory described under Deploy.
 docker compose up --build
 curl http://127.0.0.1:8000/health
 ```
@@ -34,3 +35,12 @@ Replace the uppercase values before calling `create_app` on the target instance.
 
 Use `LLM_BASE_URL` instead of `RUNPOD_ENDPOINT_ID` when calling a compatible public endpoint. `GITHUB_TOKEN` is optional and raises GitHub API rate limits.
 
+## Deploy
+
+Before deploying with a bind mount, create the host directory for the container user:
+
+```sh
+install -d -o 1000 -g 1000 /data/roast
+```
+
+Deploying without a mount also works. The data then lives inside the container and is lost when the container is removed.

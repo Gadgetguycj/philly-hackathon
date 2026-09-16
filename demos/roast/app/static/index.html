@@ -9,6 +9,7 @@
   <section class="panel">
     <h1>Roast My Repo</h1>
     <p>Enter a public GitHub repository. The model will read selected files and review the code.</p>
+    <p id="usage" class="status" aria-live="polite"></p>
     <form id="roast-form">
       <label for="repo-url">GitHub repository URL</label>
       <div class="row"><input id="repo-url" name="repo_url" type="url" required placeholder="https://github.com/owner/repo"><button id="roast-button" type="submit">Roast</button></div>
@@ -19,4 +20,3 @@
   </section>
 </main><script src="/static/app.js"></script></body>
 </html>
-

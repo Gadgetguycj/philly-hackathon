@@ -6,6 +6,15 @@ const statusLine = document.getElementById('status');
 const output = document.getElementById('output');
 let lastRoast = '';
 
+async function refreshUsage() {
+  try {
+    const response = await fetch('/api/usage');
+    if (!response.ok) return;
+    const usage = await response.json();
+    document.getElementById('usage').textContent = `${Math.max(usage.limit - usage.count, 0)} generations remaining this hour.`;
+  } catch (_) {}
+}
+
 async function streamRequest(path, body) {
   output.textContent = ''; statusLine.textContent = 'Starting';
   const controller = new AbortController();
@@ -37,13 +46,14 @@ form.addEventListener('submit', async event => {
   event.preventDefault(); roastButton.disabled = true; fixButton.hidden = true;
   try { lastRoast = await streamRequest('/api/roast', {repo_url: repoInput.value}); fixButton.hidden = !lastRoast; }
   catch (error) { statusLine.textContent = error.name === 'AbortError' ? 'The request timed out after 3 minutes.' : error.message; }
-  finally { roastButton.disabled = false; }
+  finally { roastButton.disabled = false; refreshUsage(); }
 });
 
 fixButton.addEventListener('click', async () => {
   fixButton.disabled = true;
   try { await streamRequest('/api/fix', {repo_url: repoInput.value, roast: lastRoast}); }
   catch (error) { statusLine.textContent = error.name === 'AbortError' ? 'The request timed out after 3 minutes.' : error.message; }
-  finally { fixButton.disabled = false; }
+  finally { fixButton.disabled = false; refreshUsage(); }
 });
 
+refreshUsage();
