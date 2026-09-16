@@ -81,10 +81,18 @@ def build_chat_request(data_url: str, notes: str = "") -> dict:
 
 def request_timeout() -> float:
     try:
-        seconds = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "240"))
+        seconds = float(os.getenv("REQUEST_TIMEOUT_SECONDS", "900"))
     except ValueError:
-        return 240.0
-    return seconds if seconds > 0 else 240.0
+        return 900.0
+    return seconds if seconds > 0 else 900.0
+
+
+def keepalive_interval() -> float:
+    try:
+        seconds = float(os.getenv("KEEPALIVE_INTERVAL_SECONDS", "10"))
+    except ValueError:
+        return 10.0
+    return seconds if seconds > 0 else 10.0
 
 
 def extract_html(text: str) -> str:

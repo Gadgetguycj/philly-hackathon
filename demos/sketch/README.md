@@ -48,7 +48,7 @@ Replace the uppercase values before calling `create_app` on the target instance.
 ```json
 {
   "name": "sketch",
-  "image": "ghcr.io/galaxygate/philly-hackathon-sketch:latest",
+  "image": "127.0.0.1:5000/sketch:base",
   "ports": [{"host_port": 8000, "container_port": 8000, "protocol": "TCP", "http": true}],
   "environment": {
     "RUNPOD_API_KEY": "RUNPOD_API_KEY",

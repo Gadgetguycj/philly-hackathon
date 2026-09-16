@@ -10,7 +10,7 @@ Before you start you need a laptop you can install software on, a GitHub account
 
 Use the coding tool you already have. Any of these can do everything in this guide from a browser or a desktop app:
 
-- **Cursor.** Desktop: download from https://cursor.com/download, sign in, then File, Open Folder, and choose an empty folder named `hackathon`. Web: open https://cursor.com/agents; cloud agents need a paid Cursor plan. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card first.
+- **Cursor.** Desktop: download from https://cursor.com/download, sign in, then File, Open Folder, and choose a new empty folder named `hackathon` (create it on your Desktop first). Web: open https://cursor.com/agents; cloud agents need a paid Cursor plan. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card first.
 - **Claude Code.** Desktop app or terminal, opened in an empty folder named `hackathon`. Web: https://claude.ai/code, connected to a GitHub repository of yours (any empty repository works).
 - **Codex.** Desktop app or terminal, opened in an empty folder named `hackathon`. Codex on the web cannot connect MCP servers, so use the desktop or terminal version.
 
@@ -28,7 +28,7 @@ If you have none of these, use Cursor.
 2. Open the RunPod credit link from your check-in email and redeem it. Your balance should read $15.
 3. In the console open Settings, expand API Keys, click Create API Key. Name it `hackathon-app`, choose the permission `All`, create it, and copy the key now. RunPod shows it only once. You paste it into the prompt in step 5.
 
-This key can spend your credit. It goes into your app's environment on your server, never into your code or your repository. Revoke it on the same page after the event.
+This key can spend your credit. It goes into your app's environment on your server, never into your code or your repository. Revoke it on the same page after the event. Your agent needs the `All` permission once, to create your endpoint. After that you can create a second key with only the permission your app needs and ask the agent to put that one in the app's environment; the Secure score in Part 3 rewards this.
 
 ### 4. Connect the two MCP servers
 
@@ -45,7 +45,7 @@ Both servers sign you in through a browser window. There is no key to paste for 
 }
 ```
 
-Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on.
+Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on. While the agent works, Cursor asks you to approve commands that reach your own server; approve them.
 
 **Cursor web.** At https://cursor.com/agents open the MCP dropdown, add each address as an HTTP server, and complete the sign-in each one asks for.
 
@@ -69,10 +69,11 @@ codex mcp add runpod --url https://mcp.getrunpod.io/
 codex mcp login runpod
 ```
 
-Start Codex with network access on, or every check in step 5 asks for approval:
+Codex blocks network access from commands unless you allow it. Add these two lines to `~/.codex/config.toml` (create the file if it is missing), then start `codex`:
 
-```bash
-codex -c sandbox_workspace_write.network_access=true
+```toml
+[sandbox_workspace_write]
+network_access = true
 ```
 
 **Check.** Paste this into your tool: `Call the GalaxyGate list_workspaces tool and the RunPod list-endpoints tool and show me both results.` You should see one GalaxyGate workspace with your name on it, and a RunPod endpoint list, which may be empty. If either call is denied, redo the sign-in for that server.
@@ -100,7 +101,7 @@ A note on the key. Pasting a secret into an agent chat is bad practice: it lands
 
 ### The one rule
 
-Your app, its data, and your RunPod key live on your GalaxyGate server. Your app's backend calls RunPod over HTTPS. Never call RunPod from browser JavaScript, and never put the key in your repository.
+Your app, its data, and your RunPod key live on your GalaxyGate server. Your app's backend calls RunPod over HTTPS. Never call RunPod from browser JavaScript, and never put the key in your repository. Your public URL passes through a proxy that drops any response with no bytes for 100 seconds, so a slow GPU call must stream or send progress bytes while it waits; the demo does this.
 
 ### The demo: Sketch to Site
 
@@ -108,9 +109,9 @@ Open your URL on your phone. Photograph a website sketch drawn on paper or a whi
 
 ### Change the demo, or start your own app
 
-The demo running on your server is `demos/sketch` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone https://github.com/<your GitHub username>/philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos. Push your changes to your fork; the server builds from there.
+The demo running on your server is `demos/sketch` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account. In Cursor desktop, Claude Code desktop, or Codex, tell your agent: `Clone https://github.com/<your GitHub username>/philly-hackathon into this folder and work in demos/sketch.` On Claude Code web or a Cursor cloud agent, start a new session on your fork instead and turn both MCP connections on for it; paste the contents of `HACKATHON.md` from your first session into the new one. Edit whatever you like, or add a new app folder next to the demos. Push your changes to your fork; the server builds from there.
 
-To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for https://github.com/<your GitHub username>/philly-hackathon and folder demos/sketch.` The agent has your server clone your fork, build the image into a registry that runs on the server, and switch the app to it. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
+To put your changes on your server, tell your agent: `Fetch https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md and follow its step 12 for https://github.com/<your GitHub username>/philly-hackathon and folder demos/sketch.` The agent has your server clone your fork, build the image into a registry that runs on the server, and switch the app to it. If the agent cannot find `HACKATHON.md`, paste its contents into the chat. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
 
 ### Use a GPU model from your app
 
@@ -120,7 +121,7 @@ Ready-made models, no deployment. Tell your agent: `Add a route to my app that g
 
 ### Spending
 
-The demo app caps itself at 20 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. Your endpoint scales to zero when idle and bills by the second while a request runs. Check your RunPod balance in the console before you submit.
+The demo app caps itself at 20 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. Your endpoint scales to zero when idle. It bills for the whole time a worker is running, including the model load and the idle minute after a request. The first request after a quiet period is slow while the model loads, so send one generation through your app yourself right before a judge tries it. Check your RunPod balance in the console before you submit.
 
 ## Part 3. Submit
 
@@ -149,10 +150,10 @@ Do not include environment screens, API keys, private keys, or credit links in a
 
 Judges score live, using their own inputs, not your demo input.
 
-- **It works, 30.** The judge's first input produces the promised result (15). A second, different input also works (10). Nothing crashes or shows an error during the judge's session (5).
+- **It works, 30.** The judge's first input produces the promised result (15). A second, different input also works (10). Nothing in the judge's session ends in a crash, a blank screen, or a spinner that never resolves (5); an upstream failure the app reports clearly does not count against this.
 - **Simple to use, 20.** A first-time user completes the core task with no instructions (10). The screen always says what is happening: loading, GPU waking up, done, failed (5). The README gets a stranger running in one read (5).
 - **Reliable, 15.** Results survive a page reload and a second run (5). A slow GPU start or an upstream error is shown to the user instead of a hang or a blank page (5). Paid routes have a cap or a login so a stranger cannot drain your credit (5).
-- **Secure, 15.** Secrets exist only in the server's environment, not in the repository, logs, or screenshots (5). The browser never calls RunPod directly; only your server does (5). The RunPod key is scoped to what the app needs and can be revoked without breaking anything else (5).
+- **Secure, 15.** Secrets exist only in the server's environment, not in the repository, logs, or screenshots (5). The browser never calls RunPod directly; only your server does (5). The key in the app's environment is no broader than the app needs, and revoking it breaks nothing else (5); the single `All` key from setup used for both setup and the app scores 2 of 5.
 - **Scalable, 10.** GPU work runs on a RunPod endpoint that scales to zero and can add workers (5). App state lives outside the container (a mount or a database) so a redeploy keeps it (5).
 - **Agentic, 10.** The app itself decides what to do next using model output or tools, not a single fixed call; the judge can see at least one such decision (10).
 
@@ -161,7 +162,7 @@ Extra credit, up to 15 points on top:
 - **More of GalaxyGate, 5 each, up to 10.** A second server doing real work, private networking between servers, a floating IP, a scheduled backup or snapshot, or a load balancer, each used for a reason the judge can see.
 - **More of RunPod, 5.** A second endpoint or model, a network volume, or a pod used for training or a batch job, used for a reason the judge can see.
 
-Ties break on Simple to use, then Reliable. If your app is down when judges test it, a timestamped end-to-end recording counts for everything except the first 15 points of It works.
+Ties break on Simple to use, then Reliable. If your app is down when judges reach you, you have the rest of the judging window to bring it back. A timestamped end-to-end recording earns the Secure, Scalable and Agentic points and nothing else, because every other category is scored from a judge's own input.
 
 ## When something fails
 
@@ -170,7 +171,7 @@ Ties break on Simple to use, then Reliable. If your app is down when judges test
 - **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow state and its failed children and bring them to the table.
 - **The generation shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment, keeping every existing variable.
 - **RunPod answers 402.** Your credit is gone. Check the console.
-- **A generation hangs.** The first request after a quiet period loads the model and can take several minutes. Ask the agent to read the app logs and to check the endpoint's workers in the RunPod console. Do not resend the same request repeatedly.
+- **A generation fails or times out after a few minutes.** The first request after a quiet period loads the model onto the GPU. Wait two minutes, then send exactly one more. If that also fails, ask the agent to read the app logs and bring the error text to the GalaxyGate table.
 
 When you ask for help, bring: your tool, the step you were on, the ids from `HACKATHON.md`, and the exact error text with your key removed.
 
