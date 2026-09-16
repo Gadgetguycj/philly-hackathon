@@ -12,7 +12,7 @@ Create an empty folder on your Desktop named `hackathon`. Everything below happe
 
 How to open a terminal in that folder, when a step says to:
 
-- **Windows.** Right-click the `hackathon` folder, choose Open in Terminal. Also install Git for Windows from https://git-scm.com/downloads/win once; your coding tool uses it to run commands.
+- **Windows.** Right-click the `hackathon` folder, choose Open in Terminal. Also install Git for Windows from https://git-scm.com/downloads/win once with its default options; your coding agent runs the setup commands through it.
 - **macOS.** Open Terminal from Spotlight, type `cd ` with a space, drag the `hackathon` folder onto the Terminal window, press Enter. The prompt now ends in `hackathon`.
 
 Pick one tool. If you have none, pick Cursor.
