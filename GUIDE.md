@@ -69,7 +69,7 @@ codex mcp add runpod --url https://mcp.getrunpod.io/
 codex mcp login runpod
 ```
 
-Codex blocks network access from commands unless you allow it. Add these two lines to `~/.codex/config.toml` (create the file if it is missing), then start `codex`:
+Codex blocks network access from commands unless you allow it. Add these lines to `~/.codex/config.toml` (create the file if it is missing), then start `codex`:
 
 ```toml
 sandbox_mode = "workspace-write"
