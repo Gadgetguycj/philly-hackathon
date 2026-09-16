@@ -1,0 +1,227 @@
+import asyncio
+import json
+import sqlite3
+from datetime import datetime, timedelta, timezone
+from pathlib import Path
+
+import pytest
+from fastapi import HTTPException
+
+from app import main
+from tests.conftest import REAL_ASYNC_CLIENT
+
+SAMPLE = Path(__file__).resolve().parent.parent / "samples" / "sketch.jpg"
+
+HTML_EVENTS = (
+    '{"choices":[{"delta":{"content":"```html\\n<!doctype html>\\n<html><head><style>'
+    'body{font-family:sans-serif}</style></head><body>"}}]}',
+    '{"choices":[{"delta":{"content":"<h1>HEADER</h1><p>CARD 1</p></body></html>\\n```"},'
+    '"finish_reason":"stop"}]}',
+    '{"choices":[],"usage":{"prompt_tokens":1200,"completion_tokens":420,"total_tokens":1620}}',
+    "[DONE]",
+)
+
+
+def configure_app(monkeypatch, tmp_path) -> None:
+    monkeypatch.setattr(main, "DATA_DIR", tmp_path)
+    monkeypatch.setattr(main, "SITES_DIR", tmp_path / "sites")
+    monkeypatch.setattr(main, "DB_PATH", tmp_path / "sketch.db")
+    main.init_db()
+
+
+def request_app(method, path, **kwargs):
+    async def send():
+        transport = main.httpx.ASGITransport(app=main.app)
+        async with REAL_ASYNC_CLIENT(transport=transport, base_url="http://test", timeout=30) as client:
+            return await client.request(method, path, **kwargs)
+
+    return asyncio.run(send())
+
+
+def post_sketch(image: bytes = None, notes: str = ""):
+    return request_app(
+        "POST",
+        "/api/sketch",
+        files={"image": ("sketch.jpg", image if image is not None else SAMPLE.read_bytes(), "image/jpeg")},
+        data={"notes": notes},
+    )
+
+
+def test_end_to_end_request_builds_hosts_and_lists_the_page(monkeypatch, tmp_path, fake_upstream):
+    received: list = []
+    fake_upstream(monkeypatch, events=HTML_EVENTS, received=received)
+    configure_app(monkeypatch, tmp_path)
+    monkeypatch.setenv("LLM_MODEL", "Qwen/Qwen2.5-VL-7B-Instruct")
+
+    response = post_sketch(notes="Ada's Garage")
+    body = response.json()
+
+    assert response.status_code == 200
+    assert body["url"] == f"/s/{body['id']}/"
+    assert len(body["id"]) == 10
+    assert isinstance(body["elapsed_seconds"], float)
+    # The server flushes one whitespace byte when the model starts writing, so the phone can show progress.
+    assert response.text.startswith(" ")
+
+    sent = received[0]["messages"][1]["content"]
+    assert sent[0] == {"type": "text", "text": "Ada's Garage"}
+    assert sent[1]["image_url"]["url"].startswith("data:image/jpeg;base64,")
+
+    page = request_app("GET", body["url"])
+    assert page.status_code == 200
+    assert page.text.startswith("<!doctype html>")
+    assert page.text.endswith("</html>")
+    assert "```" not in page.text
+
+    sketch = request_app("GET", f"{body['url']}sketch.jpg")
+    assert sketch.status_code == 200
+    assert sketch.headers["content-type"] == "image/jpeg"
+    assert sketch.content.startswith(b"\xff\xd8\xff")
+
+    listed = request_app("GET", "/api/sites").json()
+    assert [row["id"] for row in listed] == [body["id"]]
+    assert listed[0]["notes"] == "Ada's Garage"
+    assert listed[0]["model"] == "Qwen/Qwen2.5-VL-7B-Instruct"
+    assert listed[0]["tokens"] == 1620
+    assert listed[0]["sketch_url"] == f"/s/{body['id']}/sketch.jpg"
+
+
+def test_generated_page_carries_the_content_security_policy(monkeypatch, tmp_path, fake_upstream):
+    fake_upstream(monkeypatch, events=HTML_EVENTS)
+    configure_app(monkeypatch, tmp_path)
+
+    url = post_sketch().json()["url"]
+    page = request_app("GET", url)
+
+    assert page.headers["content-security-policy"] == "default-src 'none'; style-src 'unsafe-inline'; img-src data:"
+    assert page.headers["x-frame-options"] == "SAMEORIGIN"
+    assert page.headers["content-type"].startswith("text/html")
+
+
+def test_site_ids_are_validated_before_the_filesystem_is_touched(monkeypatch, tmp_path):
+    configure_app(monkeypatch, tmp_path)
+    outside = tmp_path / "escaped"
+    outside.mkdir()
+    (outside / "index.html").write_text("<html>not a generated page</html>")
+
+    assert request_app("GET", "/s/AbCdEfGhIj/").status_code == 404
+    with pytest.raises(HTTPException) as refused:
+        main.site_file("../escaped", "index.html")
+    assert refused.value.status_code == 404
+
+
+def test_hourly_cap_blocks_the_second_request_without_calling_the_model(monkeypatch, tmp_path, fake_upstream):
+    received: list = []
+    fake_upstream(monkeypatch, events=HTML_EVENTS, received=received)
+    configure_app(monkeypatch, tmp_path)
+    monkeypatch.setenv("MAX_GENERATIONS_PER_HOUR", "1")
+
+    first = post_sketch()
+    blocked = post_sketch()
+    usage = request_app("GET", "/api/usage").json()
+
+    assert first.status_code == 200
+    assert blocked.status_code == 429
+    assert blocked.json()["detail"] == "The hourly generation limit of 1 was reached."
+    assert blocked.json()["resets_at"]
+    assert len(received) == 1
+    assert usage == {"count": 1, "limit": 1, "remaining": 0}
+
+
+def test_hourly_cap_resets_after_an_hour(monkeypatch, tmp_path):
+    configure_app(monkeypatch, tmp_path)
+    monkeypatch.setenv("MAX_GENERATIONS_PER_HOUR", "2")
+    clock = datetime(2026, 9, 16, 10, 0, tzinfo=timezone.utc)
+    monkeypatch.setattr(main, "utc_now", lambda: clock)
+
+    assert main.reserve_generation()[0] is True
+    assert main.reserve_generation()[0] is True
+    allowed, resets_at = main.reserve_generation()
+    assert allowed is False
+    assert resets_at == clock + timedelta(hours=1)
+
+    clock += timedelta(hours=1, seconds=1)
+    assert main.reserve_generation()[0] is True
+
+
+@pytest.mark.parametrize("value", ["0", "-4", "not-a-number"])
+def test_invalid_generation_limit_uses_the_default(value, monkeypatch):
+    monkeypatch.setenv("MAX_GENERATIONS_PER_HOUR", value)
+
+    assert main.generation_limit() == 20
+
+
+def test_upstream_error_body_is_returned_verbatim_as_502(monkeypatch, tmp_path, fake_upstream):
+    failure = '{"status":402,"title":"Insufficient Balance","detail":"insufficient balance"}'
+    fake_upstream(monkeypatch, fail_status=402, fail_body=failure)
+    configure_app(monkeypatch, tmp_path)
+
+    response = post_sketch()
+
+    assert response.status_code == 502
+    assert response.json() == {"detail": f"RunPod returned HTTP 402: {failure}"}
+    assert request_app("GET", "/api/sites").json() == []
+
+
+def test_reply_without_a_document_is_reported_and_stores_nothing(monkeypatch, tmp_path, fake_upstream):
+    fake_upstream(
+        monkeypatch,
+        events=('{"choices":[{"delta":{"content":"I cannot read the photograph."}}]}', "[DONE]"),
+    )
+    configure_app(monkeypatch, tmp_path)
+
+    body = post_sketch().json()
+
+    assert body["detail"] == "The model did not return a complete HTML document."
+    assert "url" not in body
+    assert request_app("GET", "/api/sites").json() == []
+    assert not list((tmp_path / "sites").iterdir())
+
+
+def test_upload_that_is_not_an_image_returns_400(monkeypatch, tmp_path, fake_upstream):
+    fake_upstream(monkeypatch, events=HTML_EVENTS)
+    configure_app(monkeypatch, tmp_path)
+
+    response = post_sketch(image=b"not an image at all")
+
+    assert response.status_code == 400
+    assert response.json() == {"detail": "The upload was not a readable image."}
+
+
+def test_saved_photo_is_downscaled_and_recorded(monkeypatch, tmp_path, fake_upstream):
+    fake_upstream(monkeypatch, events=HTML_EVENTS)
+    configure_app(monkeypatch, tmp_path)
+
+    site_id = post_sketch().json()["id"]
+    saved = (tmp_path / "sites" / site_id / "sketch.jpg").read_bytes()
+
+    with sqlite3.connect(tmp_path / "sketch.db") as connection:
+        rows = connection.execute("SELECT id, tokens FROM sites").fetchall()
+    assert rows == [(site_id, 1620)]
+    assert len(saved) < SAMPLE.stat().st_size
+    assert json.loads(request_app("GET", "/api/usage").text)["count"] == 1
+
+
+def test_health_reports_configuration_without_calling_the_model(monkeypatch):
+    monkeypatch.setenv("RUNPOD_API_KEY", "test-key")
+    monkeypatch.delenv("LLM_BASE_URL", raising=False)
+    monkeypatch.setenv("RUNPOD_ENDPOINT_ID", "endpoint")
+
+    assert asyncio.run(main.health()) == {"status": "ok", "runpod_key_set": True, "model_configured": True}
+
+    monkeypatch.delenv("RUNPOD_ENDPOINT_ID")
+    monkeypatch.delenv("RUNPOD_API_KEY")
+    assert asyncio.run(main.health()) == {"status": "ok", "runpod_key_set": False, "model_configured": False}
+
+
+def test_startup_exits_with_a_clear_data_directory_error(monkeypatch, tmp_path, caplog):
+    data_dir = tmp_path / "data"
+    data_dir.mkdir()
+    monkeypatch.setattr(main, "DATA_DIR", data_dir)
+    monkeypatch.setattr(main, "SITES_DIR", data_dir / "sites")
+    monkeypatch.setattr(main.os, "access", lambda *_: False)
+
+    with caplog.at_level("ERROR"), pytest.raises(SystemExit, match="1"):
+        main.init_db()
+
+    assert f"install -d -o 1000 -g 1000 {data_dir}" in caplog.text

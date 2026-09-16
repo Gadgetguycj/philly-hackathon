@@ -2,6 +2,7 @@
 set -eu
 
 BASE_URL="${BASE_URL:-http://127.0.0.1:8000}"
+SKETCH="${SKETCH:-$(dirname "$0")/../samples/sketch.jpg}"
 expected_key=false
 [ -n "${RUNPOD_API_KEY:-}" ] && expected_key=true
 expected_model=false
@@ -14,15 +15,16 @@ assert isinstance(health["runpod_key_set"], bool)
 assert isinstance(health["model_configured"], bool)
 assert health["runpod_key_set"] == (sys.argv[1] == "true")
 assert health["model_configured"] == (sys.argv[2] == "true")
+print("health ok")
 ' "$expected_key" "$expected_model"
 
-if [ -n "${RUNPOD_API_KEY:-}" ]; then
-  if [ -z "${LLM_BASE_URL:-}" ] && [ -z "${RUNPOD_ENDPOINT_ID:-}" ]; then
-    echo "Set LLM_BASE_URL or RUNPOD_ENDPOINT_ID to run the real generation." >&2
-    exit 1
-  fi
-  curl --fail --no-buffer --silent --show-error \
-    -H 'Content-Type: application/json' \
-    -d "{\"repo_url\":\"${ROAST_REPO_URL:-https://github.com/encode/httpx}\"}" \
-    "$BASE_URL/api/roast"
+if [ -n "${RUNPOD_API_KEY:-}" ] && [ -n "${LLM_BASE_URL:-}" ]; then
+  curl --fail --silent --show-error --max-time "${REQUEST_TIMEOUT_SECONDS:-240}" \
+    -F "image=@$SKETCH" -F "notes=${NOTES:-}" "$BASE_URL/api/sketch" | python3 -c '
+import json, sys
+result = json.load(sys.stdin)
+if "url" not in result:
+    sys.exit(result.get("detail", "The server returned no page."))
+print(sys.argv[1] + result["url"], "in", result["elapsed_seconds"], "seconds")
+' "$BASE_URL"
 fi

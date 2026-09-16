@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sketch to Site</title><link rel="stylesheet" href="/static/style.css">
+</head>
+<body><main>
+  <nav><strong>Sketch to Site</strong><a href="/sites">Pages</a></nav>
+  <section class="panel">
+    <h1>Sketch to Site</h1>
+    <p>Photograph a hand-drawn sketch of a web page. The model reads the drawing, writes the page, and this server hosts it.</p>
+    <p id="usage" class="status" aria-live="polite"></p>
+    <form id="sketch-form">
+      <label class="file-button" for="photo">Take a photo</label>
+      <input id="photo" name="image" type="file" accept="image/*" capture="environment" required>
+      <p id="file-name" class="hint"></p>
+      <img id="preview" alt="The sketch you selected" hidden>
+      <label for="notes">Notes for the model (optional)</label>
+      <input id="notes" name="notes" type="text" maxlength="600" placeholder="Name the business, or ask for a colour">
+      <button id="build" type="submit">Build the page</button>
+    </form>
+    <p id="status" class="status" aria-live="polite"></p>
+    <div id="result" hidden>
+      <p><a id="page-link" href="#">Open your page</a></p>
+      <canvas id="qr" aria-label="QR code for your page"></canvas>
+      <p class="hint">Point a phone camera at the code to open the page.</p>
+    </div>
+  </section>
+</main><script src="/static/qr.js"></script><script src="/static/app.js"></script></body>
+</html>
