@@ -18,8 +18,8 @@ How to open a terminal in that folder, when a step says to:
 Pick one tool. If you have none, pick Cursor.
 
 - **Cursor.** Download from https://cursor.com/download, sign in, then File, Open Folder, and choose `hackathon`. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card before you continue.
-- **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon`, run `node --version`. If it prints anything below v22, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @anthropic-ai/claude-code`, then `claude`, and sign in when it asks.
-- **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. Check Node.js the same way. Then run `npm install -g @openai/codex`, then `codex`, and sign in when it asks.
+- **Claude Code.** Needs a paid Claude plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon` run the installer: on macOS `curl -fsSL https://claude.ai/install.sh | bash`, on Windows in PowerShell `irm https://claude.ai/install.ps1 | iex`. Open a new terminal in `hackathon`, run `claude`, and sign in when it asks.
+- **Codex.** Needs a paid ChatGPT plan; if you do not have one, pick Cursor. In a terminal opened in `hackathon` run `node --version`. If it prints anything below v22, install Node.js LTS from https://nodejs.org and open the terminal again. Then run `npm install -g @openai/codex`; if that fails with a permission error on macOS, run `sudo npm install -g @openai/codex`. Then run `codex` and sign in when it asks.
 
 Terminal commands in this guide are typed in a terminal. Prompts are pasted into the tool's chat.
 
@@ -84,7 +84,7 @@ Codex will ask permission the first time the agent writes the SSH key and connec
 
 ### 5. Windows only: make sure SSH exists
 
-In a terminal opened in `hackathon` run `ssh -V`. If it prints a version, skip ahead. Otherwise open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`, wait for it to finish, close that window, and run `ssh -V` in your normal terminal again.
+This check is for your own terminal; your agent runs its commands through Git Bash, which brings its own SSH. In a terminal opened in `hackathon` run `ssh -V`. If it prints a version, skip ahead. Otherwise open PowerShell as administrator (Start, type PowerShell, right-click, Run as administrator), run `Add-WindowsCapability -Online -Name OpenSSH.Client~~~~0.0.1.0`, wait for it to finish, close that window, and run `ssh -V` in your normal terminal again.
 
 macOS and Linux already have SSH.
 
@@ -115,7 +115,7 @@ Your app, its data, and your RunPod key live on your GalaxyGate server. Your app
 
 ### Change the demo, or start your own app
 
-The demo running on your server is `demos/roast` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone my fork of philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos. As shipped, the demo forgets its roast when the page reloads; keeping results across a reload is worth 5 scoring points.
+The demo running on your server is `demos/roast` in https://github.com/GalaxyGate/philly-hackathon. Fork that repository into your GitHub account, then tell your agent: `Clone https://github.com/<your GitHub username>/philly-hackathon into this folder.` Edit whatever you like, or add a new app folder next to the demos. As shipped, the demo forgets its roast when the page reloads; keeping results across a reload is worth 5 scoring points.
 
 To put your changes on your server, tell your agent: `Follow the redeploy section of AGENT.md for demos/roast.` The agent copies the folder to your server over SSH, builds the image there into a registry that runs on the server, and switches the app to it. On Windows this needs Git for Windows. Ask `Show me the app logs` when something is wrong, and `Restart the app` to restart it.
 
