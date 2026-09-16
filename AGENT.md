@@ -35,15 +35,25 @@ Call `list_instances` with `workspace_id` and `q` set to `INSTANCE_NAME`. If a r
 
 Poll `get_instance` with `instance_id` at most 40 times, pausing 15 seconds between polls, until `state` is `AVAILABLE` and `online` is true. If `state` becomes `FAILED`, stop and report. After 40 polls, stop and report the last state.
 
-## 5. Prepare the data folder on the server
+## 5. Prepare the server and build the demo image on it
 
-Call `run_script` with `workspace_id`, `instance_id`, name `hackathon-prepare`, and this script:
+Call `run_script` with `workspace_id`, `instance_id`, name `hackathon-prepare`, and this script, passed exactly as written:
 
 ```
-timeout 300 cloud-init status --wait; install -d -o 1000 -g 1000 /data/sketch /data/sketch-2
+set -e
+timeout 300 cloud-init status --wait || true
+export DEBIAN_FRONTEND=noninteractive
+command -v docker >/dev/null 2>&1 || curl -fsSL https://get.docker.com | sh
+command -v git >/dev/null 2>&1 && command -v socat >/dev/null 2>&1 || { apt-get update -q && apt-get install -y -q git socat; }
+systemctl enable --now docker
+install -d -o 1000 -g 1000 /data/sketch /data/sketch-2
+docker inspect registry >/dev/null 2>&1 || docker run -d --restart always --name registry -p 127.0.0.1:5000:5000 registry:2
+rm -rf /opt/build && git clone --depth 1 https://github.com/GalaxyGate/philly-hackathon /opt/build
+docker build -t 127.0.0.1:5000/sketch:base /opt/build/demos/sketch
+docker push 127.0.0.1:5000/sketch:base
 ```
 
-It returns a workflow id. Poll `get_workflow` with `workspace_id` and that id at most 24 times, pausing 10 seconds, until `state` is `COMPLETED`. If it is `FAILED`, or still running after 24 polls, stop and report the workflow state.
+It installs Docker the same way the panel does, so the panel skips its own install later, and it builds the demo image into a registry that listens only on the server's loopback address. It returns a workflow id. Poll `get_workflow` with `workspace_id` and that id at most 60 times, pausing 15 seconds, until `state` is `COMPLETED`. A script that fails ends the workflow in `FAILED`. If it is `FAILED`, run it once more with the name `hackathon-prepare-2`; if that also fails, or the workflow is still running after 60 polls, stop and report the workflow state and the `data.message` field.
 
 ## 6. Create the GPU endpoint on RunPod
 
@@ -77,7 +87,7 @@ Otherwise call `create_app` with `instance_id` and this body. Substitute the rea
 ```json
 {
   "name": "APP_NAME",
-  "image": "ghcr.io/galaxygate/philly-hackathon-sketch:latest",
+  "image": "127.0.0.1:5000/sketch:base",
   "ports": [{"host_port": 8000, "container_port": 8000, "protocol": "TCP", "http": true}],
   "environment": {
     "RUNPOD_API_KEY": "<the key from the user's message>",
@@ -106,7 +116,7 @@ Recovery, at most once in this whole run:
 ## 10. Prove it works
 
 1. Health. `curl --fail --silent --show-error --connect-timeout 10 --max-time 30 https://APP_DOMAIN/health` passes when it prints JSON containing `"status":"ok"`, `"runpod_key_set":true` and `"model_configured":true`. When this step is reached outside the wait procedure, try it at most 12 times, pausing 15 seconds, and after 12 failures call `get_app_logs` with `app_id` and tail 100; if that errors, call `get_app` and report its `state`, `locked` and `container_id` instead. Show the user whichever you got, with the key redacted, and stop.
-2. Real generation. Download the sample sketch: `curl --fail --silent --show-error -o sample-sketch.jpg https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/demos/sketch/samples/sketch.jpg`. Then `curl --silent --show-error --max-time 900 -w '\nHTTP:%{http_code}\n' -F "image=@sample-sketch.jpg" -F "notes=A landing page with a header, a hero, three cards, and a footer." https://APP_DOMAIN/api/sketch`. Expected: JSON with `"url"` and `HTTP:200`. Then `curl --fail --silent --show-error --max-time 30 https://APP_DOMAIN<url>` must return HTML. If the response mentions 401, tell the user the key was not substituted or is wrong, and stop. If it mentions 402, tell the user their RunPod credit is exhausted, and stop. If it mentions an hourly limit, report the cap and stop. Any other error: show its text redacted and stop.
+2. Real generation. Download the sample sketch: `curl --fail --silent --show-error -o sample-sketch.jpg https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/demos/sketch/samples/sketch.jpg`. Then `curl --silent --show-error --max-time 900 -w '\nHTTP:%{http_code}\n' -F "image=@sample-sketch.jpg" -F "notes=A landing page with a header, a hero, three cards, and a footer." https://APP_DOMAIN/api/sketch`. Expected: JSON with `"url"` and `HTTP:200`. A `200` whose JSON has `detail` and no `url` is a failure; show the `detail` text. Then `curl --fail --silent --show-error --max-time 30 https://APP_DOMAIN<url>` must return HTML. If the response mentions 401, tell the user the key was not substituted or is wrong, and stop. If it mentions 402, tell the user their RunPod credit is exhausted, and stop. If it mentions an hourly limit, report the cap and stop. Any other error: show its text redacted and stop.
 3. Tell the user the URL to open on their phone and laptop. Do not open it yourself.
 
 ## 11. Record and report

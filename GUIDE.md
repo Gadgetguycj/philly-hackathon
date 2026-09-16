@@ -84,7 +84,7 @@ Read https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md
 
 If your tool cannot open web pages, open https://github.com/GalaxyGate/philly-hackathon/blob/main/AGENT.md yourself, copy its whole text, and paste it under the two lines instead.
 
-The agent creates your GalaxyGate server, prepares it, creates a vision-model endpoint on RunPod under your account, deploys the demo app with a public name, warms the model, runs one real generation, and writes `HACKATHON.md` in your folder with every id you will need. The first generation downloads the model onto the GPU and takes several minutes; later ones take seconds.
+The agent creates your GalaxyGate server, installs Docker and builds the demo on it, creates a vision-model endpoint on RunPod under your account, deploys the demo with a public name, runs one real generation, and writes `HACKATHON.md` in your folder with every id you will need. The build and the first generation each take a few minutes. The first generation downloads the model onto the GPU and takes several minutes; later ones take seconds.
 
 Done when the agent reports that the health check and one real generation passed and gives you your URL, and that URL opens on your phone.
 
