@@ -45,7 +45,7 @@ Both servers sign you in through a browser window. There is no key to paste for 
 }
 ```
 
-Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on. While the agent works, Cursor asks you to approve commands that reach your own server; approve them as they appear. Setup has long waits, so stay at the laptop: if you walk away, Cursor stops at the first prompt and waits without saying so.
+Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on.
 
 **Cursor web.** At https://cursor.com/agents open the MCP dropdown, add each address as an HTTP server, and complete the sign-in each one asks for.
 
@@ -93,7 +93,9 @@ Fetch https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.m
 
 If your tool cannot open web pages, open https://github.com/GalaxyGate/philly-hackathon/blob/main/AGENT.md yourself, copy its whole text, and paste it under the two lines instead.
 
-The agent creates your GalaxyGate server, installs Docker and builds the demo on it, creates a vision-model endpoint on RunPod under your account, deploys the demo with a public name, runs one real generation, and writes `HACKATHON.md` in your folder with every id you will need. The build and the first generation each take a few minutes. The first generation downloads the model onto the GPU and takes several minutes; later ones take seconds.
+The agent creates your GalaxyGate server, installs Docker and builds the demo on it, creates a vision-model endpoint on RunPod under your account, deploys the demo with a public name, runs one real generation, and writes `HACKATHON.md` in your folder with every id you will need. The build and the first generation each take a few minutes. The first generation downloads the model onto the GPU and takes several minutes; later ones are much faster.
+
+Stay with the laptop while this runs. Cursor, Claude Code and Codex all stop and wait for you to approve the commands that reach your own server, and none of them says anything while it waits. If you come back to a screen that has not moved, look for an approval prompt before you assume something broke.
 
 Done when the agent reports that the health check and one real generation passed and gives you your URL, and that URL opens on your phone.
 
@@ -134,7 +136,7 @@ The demo app caps itself at 20 generations per hour so a stranger cannot drain y
 - The organizers' starter code and RunPod's public models are allowed; say what you reused.
 - Fabricated evidence, including a faked RunPod call, removes the project from this track.
 
-Both integrations are the entry ticket. They earn no points by themselves.
+Both integrations are the entry ticket. Having them earns nothing; how well your app uses them is what the points below measure.
 
 ### Devpost
 
@@ -144,8 +146,6 @@ Submit at https://coffee-and-code-agent.devpost.com/ before the deadline shown t
 - Your RunPod endpoint id or the public model you used, plus one request record as above.
 - Your repository, the commit you started from, the commit you submitted, and a short list of what you changed or built.
 - A video under three minutes and a README that lets a stranger run it. Check both open in a browser where you are signed out.
-- Check your RunPod balance in the console before you submit.
-
 Do not include environment screens, API keys, private keys, or credit links in anything you submit.
 
 ### Scoring, 100 points plus up to 15 extra
@@ -169,6 +169,7 @@ Ties break on Simple to use, then Reliable. If your app is down when judges reac
 ## When something fails
 
 - **An MCP server shows Needs login or a tool call is denied.** Redo that server's sign-in: Cursor desktop in Customize, MCP; Cursor web in the MCP dropdown; Claude Code desktop with `/mcp`; Claude Code web in Customize, Connectors; Codex with `codex mcp login <name>`.
+- **The agent stopped in the middle, or your session ended.** Paste the block from step 5 again, with the same team name and the same key, in a new chat. The instructions find the server, the endpoint and the app you already have and carry on. Do not change your team name, and do not ask the agent to delete anything first.
 - **The agent says the server never became ready.** Ask it to run `get_instance` and show the state. Bring it to the GalaxyGate table.
 - **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow state and its failed children and bring them to the table.
 - **The generation shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment, keeping every existing variable.
