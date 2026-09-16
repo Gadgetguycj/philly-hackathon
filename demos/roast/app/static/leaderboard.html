@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Leaderboard | Roast My Repo</title><link rel="stylesheet" href="/static/style.css">
+</head>
+<body><main>
+  <nav><a href="/">Roast My Repo</a><strong>Leaderboard</strong></nav>
+  <section class="panel"><h1>Most-roasted repositories</h1><div class="table-wrap">
+    <table><thead><tr><th>Repository</th><th>Roasts</th><th>Average score</th></tr></thead><tbody id="leaderboard"></tbody></table>
+  </div></section>
+</main><script>
+fetch('/api/leaderboard').then(r => r.json()).then(rows => {
+  const body = document.getElementById('leaderboard');
+  if (!rows.length) body.innerHTML = '<tr><td colspan="3">No completed roasts yet.</td></tr>';
+  for (const row of rows) {
+    const tr = document.createElement('tr');
+    for (const value of [row.repo, row.roast_count, row.average_score == null ? 'No score' : `${row.average_score}/10`]) {
+      const td = document.createElement('td'); td.textContent = value; tr.appendChild(td);
+    }
+    body.appendChild(tr);
+  }
+});
+</script></body></html>
+

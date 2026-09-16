@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roast My Repo</title><link rel="stylesheet" href="/static/style.css">
+</head>
+<body><main>
+  <nav><strong>Roast My Repo</strong><a href="/leaderboard">Leaderboard</a></nav>
+  <section class="panel">
+    <h1>Roast My Repo</h1>
+    <p>Enter a public GitHub repository. The model will read selected files and review the code.</p>
+    <form id="roast-form">
+      <label for="repo-url">GitHub repository URL</label>
+      <div class="row"><input id="repo-url" name="repo_url" type="url" required placeholder="https://github.com/owner/repo"><button id="roast-button" type="submit">Roast</button></div>
+    </form>
+    <p id="status" class="status" aria-live="polite"></p>
+    <pre id="output" aria-live="polite"></pre>
+    <button id="fix-button" type="button" class="secondary" hidden>Fix it</button>
+  </section>
+</main><script src="/static/app.js"></script></body>
+</html>
+

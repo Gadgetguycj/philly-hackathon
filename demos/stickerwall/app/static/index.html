@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>The Sticker Wall</title><link rel="stylesheet" href="/static/style.css">
+</head>
+<body><main>
+  <nav><strong>The Sticker Wall</strong><a href="/wall">View the wall</a></nav>
+  <section class="panel"><div>
+    <h1>Draw a sticker</h1>
+    <p>Enter your team name and describe the sticker you want.</p>
+    <form id="draw-form">
+      <label for="team">Team name</label><input id="team" required maxlength="80">
+      <label for="prompt">Sticker prompt</label><textarea id="prompt" required maxlength="1000" rows="5"></textarea>
+      <button id="draw-button" type="submit">Draw</button>
+    </form>
+    <p id="status" class="status" aria-live="polite"></p>
+  </div><div class="preview"><img id="result" alt="" hidden></div></section>
+</main><script src="/static/app.js"></script></body>
+</html>
+
