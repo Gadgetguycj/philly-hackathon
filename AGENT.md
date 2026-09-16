@@ -81,6 +81,7 @@ Record the returned app `id` as `APP_ID` and the workflow id as `APP_WORKFLOW`.
 Call `get_app` with `app_id` every 15 seconds.
 
 - `state` `AVAILABLE`: continue to step 10.
+- `state` still `PENDING` after 3 minutes: the panel can lag behind the container. Run the health check from step 10.1 once. If it returns the expected JSON, continue to step 10 and record in HACKATHON.md that the panel still showed the app as deploying. If it does not, keep polling until the 4 minute mark below.
 - `state` `FAILED`, or still `PENDING` after 4 minutes: call `get_workflow` with `workspace_id` and `APP_WORKFLOW`. If a child named `app-integrate` shows `FAILED`, or the message still says the panel is integrating Docker, this is the known first-deploy issue on a fresh server. Recover like this:
   1. Call `delete_app` with `app_id`. If it succeeds, wait 30 seconds and repeat step 8 once with the same values.
   2. If `delete_app` is refused because the app is locked, leave that app alone. Set `APP_NAME=roast-2`, use `host_port` 8001 instead of 8000 in the body, set `APP_DOMAIN` to the base name with `-2` appended (checked as in step 7), and repeat step 8 once. Record the new `APP_ID` and `APP_WORKFLOW`.
