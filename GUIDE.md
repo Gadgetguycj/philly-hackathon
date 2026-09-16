@@ -52,11 +52,11 @@ Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two s
 **Claude Code desktop or terminal.** In a terminal opened in `hackathon`:
 
 ```bash
-claude mcp add --transport http --scope user galaxygate https://mcp.galaxygate.net/mcp
-claude mcp add --transport http --scope user runpod https://mcp.getrunpod.io/
+claude mcp add -t http galaxygate https://mcp.galaxygate.net/mcp
+claude mcp add -t http runpod https://mcp.getrunpod.io/
 ```
 
-Then start `claude`, type `/mcp`, and complete the sign-in for each server.
+Then start `claude` in that same folder, type `/mcp`, and complete the sign-in for each server. The servers are saved for this folder, so always start Claude Code from it.
 
 **Claude Code web.** At https://claude.ai open Customize, then Connectors, then Add custom connector. Paste one address, save, and sign in when asked; repeat for the second. Then in https://claude.ai/code start a session on your repository and turn both connectors on for it. In the session's environment settings set network access to Full so the checks in step 5 can reach your server.
 
@@ -72,6 +72,8 @@ codex mcp login runpod
 Codex blocks network access from commands unless you allow it. Add these two lines to `~/.codex/config.toml` (create the file if it is missing), then start `codex`:
 
 ```toml
+sandbox_mode = "workspace-write"
+
 [sandbox_workspace_write]
 network_access = true
 ```
@@ -115,7 +117,7 @@ To put your changes on your server, tell your agent: `Fetch https://raw.githubus
 
 ### Use a GPU model from your app
 
-Your own endpoint. Your agent already created a serverless endpoint named `hackathon-vl` running `Qwen/Qwen2.5-VL-7B-Instruct`, a vision-language model that reads images and text. Your app calls it at `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` exactly like the OpenAI chat API, with your RunPod key, and an image goes in as an `image_url` content part holding a `data:image/jpeg;base64,...` URL. To run a different Hugging Face model, tell your agent: `Using the RunPod MCP, create a serverless endpoint named hackathon-llm with image runpod/worker-v1-vllm:v2.27.0 on the ADA_24 pool, container disk 80 GB, workers min 0 max 1, idle timeout 60, env MODEL_NAME=<model> and MAX_MODEL_LEN=8192, then show me the endpoint id.` Call it from your app at `https://api.runpod.ai/v2/<that id>/openai/v1/chat/completions` the same way. The first request after a quiet period waits while the model loads; keep your app's timeout above two minutes.
+Your own endpoint. Your agent already created a serverless endpoint named `hackathon-vl` running `Qwen/Qwen2.5-VL-7B-Instruct`, a vision-language model that reads images and text. Your app calls it at `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` exactly like the OpenAI chat API, with your RunPod key, and an image goes in as an `image_url` content part holding a `data:image/jpeg;base64,...` URL. To run a different Hugging Face model, tell your agent: `Using the RunPod MCP, create a serverless endpoint named hackathon-llm with image runpod/worker-v1-vllm:v2.27.0 on the ADA_24 pool, container disk 80 GB, workers min 0 max 1, idle timeout 60, env MODEL_NAME=<model> and MAX_MODEL_LEN=8192, then show me the endpoint id.` Call it from your app at `https://api.runpod.ai/v2/<that id>/openai/v1/chat/completions` the same way. The first request after a quiet period waits while the model loads; give your app's call at least fifteen minutes, as the demo does, and stream or send progress bytes while it waits.
 
 Ready-made models, no deployment. Tell your agent: `Add a route to my app that generates an image with RunPod's Flux Schnell public endpoint using the RUNPOD_API_KEY from the environment, saves the image under /data, and shows it on a page.` The endpoint is `https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync`; it takes `{"input":{"prompt":"...","width":768,"height":768}}` with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns the image URL at `output.image_url`. Text-to-speech, text models, and other ready-made models are listed at https://docs.runpod.io/public-endpoints/overview.
 
