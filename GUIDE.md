@@ -151,7 +151,7 @@ Do not include environment screens, API keys, private keys, or credit links in a
 
 - **Live app, 20.** The URL opens (5), a judge's fresh input succeeds (10), and the same result is still on screen after the judge reloads the page (5).
 - **RunPod integration, 20.** A judge's fresh input produces a request visible in your RunPod console or a RunPod response `id` you show the judge (10), and your app visibly uses the model's result (10).
-- **Agent-operated infrastructure, 15.** Your GalaxyGate workflow history shows an `instance.provision` (5), an `app.provision` (5), and one later `app.deploy` or `app.power` workflow (5), each started inside the build period. The panel shows them on your workspace's Workflows page; screenshot it. Your agent can also print them with `list_workspace_workflows`, and if a row has scrolled off, with `panel_request` GET `/v1/workspaces/<id>/workflows` and params `{"name": "instance.provision"}`.
+- **Agent-operated infrastructure, 15.** Your GalaxyGate workflow history shows an `instance.provision` (5), an `app.provision` (5), and one `app.deploy` or `app.power` workflow that started after that `app.provision` finished (5); the `app.deploy` that runs inside the first provision does not count. All three must fall inside the build period. The panel shows them on your workspace's Workflows page; screenshot it. Your agent can also print them with `list_workspace_workflows`, and if a row has scrolled off, with `panel_request` GET `/v1/workspaces/<id>/workflows` and params `{"name": "instance.provision"}`.
 - **Agentic usefulness, 25.** A stated user task with a clear success condition (5), a page or log the judge can open that shows each model decision and each tool result and grows when the judge submits their own input (10), success on that judge-supplied input (5), and one honestly demonstrated limitation (5). A single fixed model call earns no action points.
 - **Reliability, safety, cost, 15.** Secrets kept out of the repository, logs, and screenshots (5), paid routes protected by a cap or login (5), a slow start or upstream error handled visibly (5).
 - **Submission, 5.** Video (2), README (2), the disclosures above (1).
@@ -163,7 +163,7 @@ Ties break on agentic usefulness, then reliability. If your app is down when jud
 - **An MCP server shows Needs login or a tool call is denied.** Redo that server's sign-in: Cursor in Customize, MCP; Claude Code with `/mcp`; Codex with `codex mcp login <name>`.
 - **The agent says the server never became ready.** Ask it to run `get_instance` and show the state, and `cloud-init status --long` over SSH. Bring both to the GalaxyGate table.
 - **The first app deploy sticks or fails.** The agent instructions recover once on their own. If it fails twice, ask the agent for the workflow state and its failed children and bring them to the table.
-- **The roast shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment with all four variables.
+- **The roast shows an error mentioning 401.** The key was not substituted or is wrong. Create a new key and ask the agent to update the app's environment, keeping every existing variable.
 - **RunPod answers 402.** Your credit is gone. Check the console.
 - **A generation hangs.** Ask the agent to read the app logs and, for your own endpoint, the endpoint's workers in the RunPod console. Do not resend the same request repeatedly.
 
