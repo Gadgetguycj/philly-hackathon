@@ -27,7 +27,7 @@ Open `http://127.0.0.1:8000/` on a phone, take a photo of a sketch, and the page
 | `GET /sites` | Every page built so far, newest first, with the sketch it came from. |
 | `GET /health`, `GET /api/usage` | Configuration and the hourly generation count. |
 
-The response body of `POST /api/sketch` is one JSON object. While the GPU is still waking, the server flushes a newline every `KEEPALIVE_INTERVAL_SECONDS`, because Cloudflare answers 524 when an origin sends no byte for 100 seconds and a cold start takes minutes. Leading whitespace is legal in front of a JSON document, so the body is still parsed as one object. A single space follows the moment the model starts writing, which is how the phone switches from "GPU is waking up" to "Writing your page". An upstream failure inside the first interval returns HTTP 502 with the upstream body unchanged, and a later failure arrives as `{"detail": ...}` in the streamed object.
+The response body of `POST /api/sketch` is one JSON object. While the GPU is still waking, the server flushes a newline every `KEEPALIVE_INTERVAL_SECONDS`, because Cloudflare answers 524 when an origin sends no byte for 100 seconds and a cold start takes minutes. Leading whitespace is legal in front of a JSON document, so the body is still parsed as one object. The newlines carry on at the same interval while the model writes the page, so nothing on the wire goes quiet for longer than that. A single space is sent the moment the model starts writing, which is how the phone switches from "GPU is waking up" to "Writing your page". An upstream failure that arrives within the first second returns HTTP 502 with the upstream body unchanged, and any later failure arrives as `{"detail": ...}` in the streamed object, with HTTP 200 already sent.
 
 A request that builds no page gives its slot of the hourly cap back, so a run of cold-start failures cannot lock a team out of their own app.
 
@@ -65,6 +65,7 @@ Replace the uppercase values before calling `create_app` on the target instance.
 }
 ```
 
+The agent appends `-2`, `-3` and so on to the domain if the name is taken.
 Use `LLM_BASE_URL` instead of `RUNPOD_ENDPOINT_ID` when calling a compatible public endpoint.
 
 ## Deploy

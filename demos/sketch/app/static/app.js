@@ -52,7 +52,7 @@ form.addEventListener('submit', async event => {
   body.append('image', photo.files[0]);
   body.append('notes', notes.value);
   const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 300000);
+  const timeout = setTimeout(() => controller.abort(), 900000);
   try {
     const response = await fetch('/api/sketch', { method: 'POST', body, signal: controller.signal });
     if (!response.ok) {
@@ -68,7 +68,7 @@ form.addEventListener('submit', async event => {
     result.hidden = false;
     statusLine.textContent = `Your page took ${data.elapsed_seconds} seconds.`;
   } catch (error) {
-    statusLine.textContent = error.name === 'AbortError' ? 'The request timed out after 5 minutes.' : error.message;
+    statusLine.textContent = error.name === 'AbortError' ? 'The request timed out after 15 minutes.' : error.message;
   } finally {
     clearTimeout(timeout);
     buildButton.disabled = false;

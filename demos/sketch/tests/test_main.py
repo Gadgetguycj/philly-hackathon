@@ -1,6 +1,7 @@
 import asyncio
 import json
 import sqlite3
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
@@ -50,8 +51,12 @@ def post_sketch(image: bytes = None, notes: str = ""):
     )
 
 
-def sketch_chunks(notes: str = "") -> tuple[dict, list[bytes]]:
-    """Posts a sketch straight to the ASGI app, so every flushed chunk stays a message of its own."""
+def sketch_chunks(notes: str = "", disconnect_after: int | None = None) -> tuple[dict, list[bytes], list[float]]:
+    """Posts a sketch straight to the ASGI app, so every flushed chunk stays a message of its own.
+
+    Returns the response start, the flushed chunks, and the wait before each one. Pass
+    disconnect_after to hang up like a phone that closed the tab after that many chunks.
+    """
     request = main.httpx.Request(
         "POST",
         "http://test/api/sketch",
@@ -74,9 +79,12 @@ def sketch_chunks(notes: str = "") -> tuple[dict, list[bytes]]:
         "root_path": "",
     }
     messages: list[dict] = []
+    gaps: list[float] = []
 
     async def run():
         sent = False
+        delivered = 0
+        previous = time.monotonic()
         finished = asyncio.Event()
 
         async def receive():
@@ -89,8 +97,18 @@ def sketch_chunks(notes: str = "") -> tuple[dict, list[bytes]]:
             return {"type": "http.request", "body": payload, "more_body": False}
 
         async def send(message):
+            nonlocal delivered, previous
             messages.append(message)
-            if message["type"] == "http.response.body" and not message.get("more_body", False):
+            if message["type"] != "http.response.body":
+                return
+            if message.get("body"):
+                now = time.monotonic()
+                gaps.append(now - previous)
+                previous = now
+                delivered += 1
+            if not message.get("more_body", False):
+                finished.set()
+            elif disconnect_after is not None and delivered >= disconnect_after:
                 finished.set()
 
         await main.app(scope, receive, send)
@@ -98,7 +116,7 @@ def sketch_chunks(notes: str = "") -> tuple[dict, list[bytes]]:
     asyncio.run(run())
     start = next(message for message in messages if message["type"] == "http.response.start")
     chunks = [m["body"] for m in messages if m["type"] == "http.response.body" and m.get("body")]
-    return start, chunks
+    return start, chunks, gaps
 
 
 def test_end_to_end_request_builds_hosts_and_lists_the_page(monkeypatch, tmp_path, fake_upstream):
@@ -145,7 +163,7 @@ def test_keep_alive_bytes_are_flushed_while_the_model_is_still_thinking(monkeypa
     configure_app(monkeypatch, tmp_path)
     monkeypatch.setenv("KEEPALIVE_INTERVAL_SECONDS", str(10 * SCALE))
 
-    start, chunks = sketch_chunks()
+    start, chunks, _ = sketch_chunks()
     first_content = next(index for index, chunk in enumerate(chunks) if chunk.strip())
     waiting = chunks[:first_content]
     body = json.loads(b"".join(chunks))
@@ -157,6 +175,47 @@ def test_keep_alive_bytes_are_flushed_while_the_model_is_still_thinking(monkeypa
     assert waiting[-1] == b" "
     assert body["url"] == f"/s/{body['id']}/"
     assert request_app("GET", body["url"]).status_code == 200
+
+
+def test_keep_alive_bytes_keep_flowing_while_the_model_writes(monkeypatch, tmp_path, streaming_upstream):
+    interval = 10 * SCALE
+    streaming_upstream(monkeypatch, events=HTML_EVENTS, token_gap=25 * SCALE)
+    configure_app(monkeypatch, tmp_path)
+    monkeypatch.setenv("KEEPALIVE_INTERVAL_SECONDS", str(interval))
+
+    start, chunks, gaps = sketch_chunks()
+    space = chunks.index(b" ")
+    document = next(index for index, chunk in enumerate(chunks) if chunk.strip())
+    body = json.loads(b"".join(chunks))
+
+    assert start["status"] == 200
+    # The model leaves 25 seconds between tokens, so the newlines have to carry on after the space
+    # that says writing began. Nothing may go quiet for the whole write.
+    assert chunks[space + 1 : document].count(b"\n") >= 2
+    # Twice the interval, because a test this fast cannot tell a late flush from a busy scheduler.
+    assert max(gaps) <= interval * 2
+    assert body["url"] == f"/s/{body['id']}/"
+    assert request_app("GET", body["url"]).status_code == 200
+
+
+def test_a_client_that_hangs_up_gives_its_slot_back(monkeypatch, tmp_path, fake_upstream):
+    fake_upstream(monkeypatch, events=HTML_EVENTS, first_token_delay=25 * SCALE)
+    configure_app(monkeypatch, tmp_path)
+    monkeypatch.setenv("KEEPALIVE_INTERVAL_SECONDS", str(10 * SCALE))
+    monkeypatch.setenv("MAX_GENERATIONS_PER_HOUR", "1")
+
+    start, chunks, _ = sketch_chunks(disconnect_after=1)
+
+    assert start["status"] == 200
+    assert chunks == [b"\n"]
+    assert request_app("GET", "/api/sites").json() == []
+    assert request_app("GET", "/api/usage").json() == {"count": 0, "limit": 1, "remaining": 1}
+
+    fake_upstream(monkeypatch, events=HTML_EVENTS)
+    built = post_sketch()
+
+    assert built.json()["url"]
+    assert request_app("GET", "/api/usage").json() == {"count": 1, "limit": 1, "remaining": 0}
 
 
 def test_generated_page_carries_the_content_security_policy(monkeypatch, tmp_path, fake_upstream):

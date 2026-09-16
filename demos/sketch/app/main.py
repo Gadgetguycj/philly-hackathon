@@ -245,29 +245,51 @@ async def build_page(image: UploadFile = File(...), notes: str = Form("")):
         return JSONResponse(status_code=502, content={"detail": upstream_detail(first_token.exception())})
 
     async def body():
-        # A cold GPU can take minutes, and Cloudflare drops a connection that sends no byte for
-        # 100 seconds. A newline every interval keeps the bytes flowing, and leading whitespace
-        # is legal in front of a JSON document, so the body is still one JSON object.
-        while not first_token.done():
-            yield "\n"
-            await asyncio.wait({first_token}, timeout=interval)
-        failure = first_token.exception()
-        if failure is not None:
-            await release()
-            yield json.dumps({"detail": upstream_detail(failure)})
-            return
-        # The space tells the browser the model started writing.
-        yield " "
-        parts = [first_token.result()]
+        # Cloudflare drops a connection that sends no byte for 100 seconds. Waking the GPU takes
+        # minutes and writing the page takes minutes more, so the clock below runs from the last
+        # byte actually sent and puts a newline on the wire whenever the interval passes without
+        # one. Leading whitespace is legal in front of a JSON document, so the body stays one
+        # JSON object.
+        saved = False
+        writing = False
+        parts: list[str] = []
+        pending = first_token
+        last_byte = time.monotonic()
         try:
-            async for token in tokens:
+            if not pending.done():
+                yield "\n"
+                last_byte = time.monotonic()
+            while True:
+                due = max(last_byte + interval - time.monotonic(), 0)
+                arrived, _ = await asyncio.wait({pending}, timeout=due)
+                if not arrived:
+                    yield "\n"
+                    last_byte = time.monotonic()
+                    continue
+                try:
+                    token = pending.result()
+                except StopAsyncIteration:
+                    break
+                if not writing:
+                    # The space tells the browser the model started writing.
+                    yield " "
+                    last_byte = time.monotonic()
+                    writing = True
                 parts.append(token)
+                pending = asyncio.ensure_future(anext(tokens))
+            if not parts:
+                raise RuntimeError("The model returned an empty response.")
             html = extract_html("".join(parts))
             site_id = await asyncio.to_thread(save_site, html, photo, notes, reported.get("total_tokens"))
+            saved = True
         except (RuntimeError, httpx.HTTPError, OSError) as exc:
-            await release()
-            yield json.dumps({"detail": str(exc)})
+            yield json.dumps({"detail": upstream_detail(exc)})
             return
+        finally:
+            # Runs on a client disconnect too, where GeneratorExit matches no except clause.
+            # The delete is one statement on a primary key, so it does not need a thread.
+            if not saved:
+                release_generation(request_id)
         yield json.dumps(
             {"id": site_id, "url": f"/s/{site_id}/", "elapsed_seconds": round(time.monotonic() - started, 1)}
         )

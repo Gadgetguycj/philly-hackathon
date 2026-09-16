@@ -6,7 +6,7 @@ Secret rule. You send RUNPOD_API_KEY only inside the `environment` object of a `
 
 Shell rule. The only shell commands here are `curl`. On Windows PowerShell write `curl.exe` instead of `curl`. Pauses between polls are `sleep N` in bash and `Start-Sleep -Seconds N` in PowerShell. Every tool named in the guide can run `curl`; if yours asks the user to approve each command, tell the user to approve them. Never skip the generation check in step 10; if you truly cannot run it, say so in plain words and tell the user to open the app on their phone, photograph any sketch, and press Build the page before they consider setup done.
 
-Id rule. Every GalaxyGate id is a string of digits, for example `"1549623084129976320"`. Pass ids as strings, never as numbers, and copy them exactly. `create_instance` and `create_app` return `{"workflow": {...}, "resource": {...}}`; the new object's id is `resource.id`, and `resource.parent.id` is the workspace, not what you want.
+Id rule. Every GalaxyGate resource id is a string of digits, for example `"1549623084129976320"`. Pass ids as strings, never as numbers, and copy them exactly. A workflow id is the exception: it is a UUID with hyphens, for example `"9f2c1d7a-4b83-4c1e-9a55-6d0f3b8e27c4"`; pass it back exactly as it came. `create_instance` and `create_app` return `{"workflow": {...}, "resource": {...}}`; the new object's id is `resource.id`, and `resource.parent.id` is the workspace, not what you want.
 
 Waiting rule. Every wait below is a fixed number of polls with a fixed pause. Count the polls. Never poll past the count. When a poll budget runs out with a workflow still pending or running, treat that as `FAILED` for that step.
 
@@ -14,7 +14,7 @@ List rule. Every GalaxyGate list tool returns a paged envelope; read rows from `
 
 Server script rule. The panel runs a script on the server through a recipe and waits about 50 seconds for it. A script that takes longer is reported as `FAILED` even though it keeps running. So every script below either finishes in under 40 seconds or starts its real work in the background and writes a marker file when done. Scripts are passed exactly as written; the web firewall in front of the panel rejects some shell patterns, and these pass. The panel never returns a script's output. A script that exits non-zero ends its workflow in `FAILED`; one that exits zero ends in `COMPLETED`.
 
-Recipes. `create_recipe` takes `workspace_id`, `name`, `category` `AUTOMATION`, `description`, and `commands` `[{"path":"/bin/sh","args":["-c","<script>"]}]`, and returns the recipe with its `id`. `install_recipe` takes `instance_id`, `recipe_id`, and `fields` `{}`, and returns a workflow whose `id` you poll with `get_workflow` and `workspace_id`; its `duration` is whole seconds since the workflow started. Recipe names must be unique, so set `RUN` to the current UTC time as six digits (`HHMMSS`) once at the start and use it in every recipe name below.
+Recipes. `create_recipe` takes `workspace_id`, `name`, `category` `AUTOMATION`, `description`, and `commands` `[{"path":"/bin/sh","args":["-c","<script>"]}]`, and returns the recipe with its `id`. `install_recipe` takes `instance_id`, `recipe_id`, and `fields` `{}`, and returns a workflow whose `id` you poll with `get_workflow` and `workspace_id`; its `duration` is whole seconds since the workflow started. If `install_recipe` itself returns an error mentioning `Instance is not available` or `must be online`, the panel is holding the server for another operation; pause 20 seconds and call it again, at most 6 times, before treating that as a failure. Recipe names must be unique, so set `RUN` to the current UTC time as six digits (`HHMMSS`) once at the start and use it in every recipe name below.
 
 ## 0. Validate the inputs
 
@@ -39,7 +39,7 @@ Call `list_instances` with `workspace_id` and `q` set to `INSTANCE_NAME`. If a r
 
 ## 4. Wait for the server to boot
 
-1. Poll `get_instance` with `instance_id` at most 40 times, pausing 15 seconds between polls, until `state` is `AVAILABLE` and `online` is true. If `state` becomes `FAILED`, stop and report. After 40 polls, stop and report the last state.
+1. Poll `get_instance` with `instance_id` at most 40 times, pausing 15 seconds between polls, until `state` is `AVAILABLE`, `online` is true, and `locked` is null or absent. The panel sets `AVAILABLE` and powers the server on before it releases its creation lock, and a recipe cannot be installed while the lock is held. If `state` becomes `FAILED`, stop and report. After 40 polls, stop and report the last state.
 2. Call `create_recipe` with name `hk-boot-RUN`, description `Boot check`, and the command script `test -f /var/lib/cloud/instance/boot-finished`. Record its `id` as `BOOT_RECIPE`.
 3. Call `install_recipe` with `instance_id`, `BOOT_RECIPE`, fields `{}`; poll its workflow at most 6 times pausing 10 seconds. `COMPLETED` means the server finished booting; continue. `FAILED` means not yet: pause 15 seconds and install it again. Do this at most 12 times in total. If none completes, stop and tell the user the server never finished its first boot.
 
@@ -52,7 +52,7 @@ cat > /opt/hackathon-prepare.sh <<'EOF2'
 set -e
 export DEBIAN_FRONTEND=noninteractive
 if ! command -v docker >/dev/null 2>&1; then curl -fsSL https://get.docker.com -o /tmp/get-docker.sh; sh /tmp/get-docker.sh; fi
-if ! command -v git >/dev/null 2>&1 || ! command -v socat >/dev/null 2>&1; then apt-get update -q; apt-get install -y -q git socat; fi
+if ! command -v git >/dev/null 2>&1 || ! command -v socat >/dev/null 2>&1; then apt-get -o DPkg::Lock::Timeout=300 update -q; apt-get -o DPkg::Lock::Timeout=300 install -y -q git socat; fi
 systemctl enable --now docker
 install -d -o 1000 -g 1000 /data/sketch /data/sketch-2
 docker start registry >/dev/null 2>&1 || docker run -d --restart always --name registry -p 127.0.0.1:5000:5000 registry:2
@@ -63,12 +63,12 @@ docker push 127.0.0.1:5000/sketch:base
 docker image rm 127.0.0.1:5000/sketch:base
 docker pull 127.0.0.1:5000/sketch:base
 EOF2
-pgrep -f hackathon-prepare.sh >/dev/null 2>&1 && exit 0
+mkdir /opt/hackathon-prepare.lock 2>/dev/null || exit 0
 rm -f /opt/hackathon-prepare.done /opt/hackathon-prepare.failed
-nohup sh -c 'if sh /opt/hackathon-prepare.sh > /var/log/hackathon-prepare.log 2>&1; then touch /opt/hackathon-prepare.done; else touch /opt/hackathon-prepare.failed; fi' > /dev/null 2>&1 &
+nohup sh -c 'if sh /opt/hackathon-prepare.sh > /var/log/hackathon-prepare.log 2>&1; then touch /opt/hackathon-prepare.done; else touch /opt/hackathon-prepare.failed; fi; rmdir /opt/hackathon-prepare.lock' > /dev/null 2>&1 &
 ```
 
-2. Call `install_recipe` with `instance_id`, that recipe's `id`, fields `{}`; record the returned workflow's `id` as `PREPARE_WORKFLOW`; poll it at most 6 times pausing 10 seconds until `COMPLETED`. If it is `FAILED`, install it once more; the script exits at once if the first run is still going, so this is safe. If that also fails, stop and report the workflow state.
+2. Call `install_recipe` with `instance_id`, that recipe's `id`, fields `{}`; record the returned workflow's `id` as `PREPARE_WORKFLOW`; poll it at most 6 times pausing 10 seconds until `COMPLETED`. If it is `FAILED`, install it once more; the script exits at once if the first run is still going or has finished, so this is safe. If that also fails, stop and report the workflow state.
 3. Call `create_recipe` with name `hk-check-RUN`, description `Prepare check`, and this exact command script. Record its `id` as `CHECK_RECIPE`.
 
 ```
@@ -99,10 +99,10 @@ Call `list_instance_apps` with `instance_id`. If a row's `name` equals `APP_NAME
 
 Only when no row matches, pick the public name. Set `SUBDOMAIN=TEAM_NAME` and `APP_DOMAIN=SUBDOMAIN.galaxygate.app`. Call `panel_request` with method `POST`, path `/v1/apps/domains`, body `{"domain":"APP_DOMAIN"}`.
 
-- The tool returns an error whose text contains `404` and mentions the domain, apps, or domains: the name is free. This endpoint uses 404 to mean available. Continue to step 8.
+- The tool returns an error whose text is `panel API 404` or otherwise contains `404` with no HTML page and no `No static resource` text: the name is free. This endpoint uses 404 to mean available. Continue to step 8.
 - The tool returns success (HTTP 200, usually an empty body): the name is taken. Set `SUBDOMAIN` to TEAM_NAME followed by `-2`, then `-3`, and so on up to `-9`, rebuild `APP_DOMAIN`, and check again. Example: team `orbit` taken, try `orbit-2.galaxygate.app`.
 - If `-9` is also taken, stop and ask the user for a different team name.
-- A `404` that names none of those, such as a bare not-found or an HTML page, means the route changed: stop and tell the user to bring "the domain check returned an unexpected 404" to the GalaxyGate table. Any other error: stop and report it.
+- A `404` whose text contains `No static resource` or an HTML page means the route changed: stop and tell the user to bring "the domain check returned an unexpected 404" to the GalaxyGate table. Any other error: stop and report it.
 
 ## 8. Deploy the demo app
 
@@ -174,7 +174,7 @@ Then tell the user: the app URL, that the health check and one real generation s
 
 The panel always pulls an app's image from a registry when it deploys, so the new image goes into the registry that runs on the server itself and listens only on its loopback address. Everything below runs on the server through recipes; nothing needs SSH. First read `HACKATHON.md` for `WORKSPACE_ID`, `INSTANCE_ID`, `APP_NAME`, `APP_ID` and `APP_DOMAIN`; if it is missing, ask the user to paste it, or call `list_instances` with `q` set to the instance name, then `list_instance_apps`, and confirm the app's domain with the user before touching anything. The user's code must be in a public GitHub repository; ask for the repository URL `REPO_URL` and the folder inside it that holds the `Dockerfile`, `APP_DIR` (for example `demos/sketch`). Set `TAG` to the current UTC time as six digits and `RUN` to the same value.
 
-1. Call `create_recipe` with name `hk-build-RUN`, description `Build`, and this exact command script with `REPO_URL`, `APP_DIR`, `APP_NAME` and `TAG` substituted, then `install_recipe` it and poll its workflow at most 6 times pausing 10 seconds until `COMPLETED`; if `FAILED`, install once more, then stop and report.
+1. Call `create_recipe` with name `hk-build-RUN`, description `Build`, and this exact command script with `REPO_URL`, `APP_DIR`, `APP_NAME` and `TAG` substituted, then `install_recipe` it and poll its workflow at most 6 times pausing 10 seconds until `COMPLETED`; if `FAILED`, install it once more and poll the same way, and only if that also fails stop and report the workflow state.
 
 ```
 cat > /opt/hackathon-build.sh <<'EOF2'
@@ -185,9 +185,9 @@ git clone --depth 1 REPO_URL /opt/build
 docker build -t 127.0.0.1:5000/APP_NAME:TAG /opt/build/APP_DIR
 docker push 127.0.0.1:5000/APP_NAME:TAG
 EOF2
-pgrep -f hackathon-build.sh >/dev/null 2>&1 && exit 0
+mkdir /opt/hackathon-build.lock 2>/dev/null || exit 0
 rm -f /opt/hackathon-build.done /opt/hackathon-build.failed
-nohup sh -c 'if sh /opt/hackathon-build.sh > /var/log/hackathon-build.log 2>&1; then touch /opt/hackathon-build.done; else touch /opt/hackathon-build.failed; fi' > /dev/null 2>&1 &
+nohup sh -c 'if sh /opt/hackathon-build.sh > /var/log/hackathon-build.log 2>&1; then touch /opt/hackathon-build.done; else touch /opt/hackathon-build.failed; fi; rmdir /opt/hackathon-build.lock' > /dev/null 2>&1 &
 ```
 
 2. Call `create_recipe` with name `hk-bcheck-RUN`, description `Build check`, and this exact command script. Install it and read its workflow the way step 5.4 does: `COMPLETED` means built; `FAILED` after 25 seconds or more means still building, so pause 20 seconds and install again, at most 24 times; `FAILED` in under 25 seconds means the build failed, so tell the user the build failed on the server, that the log is `/var/log/hackathon-build.log`, and that the GalaxyGate table can read it from the server's console in the panel, and stop.
@@ -197,13 +197,13 @@ for i in $(seq 1 35); do test -f /opt/hackathon-build.done && exit 0; test -f /o
 ```
 
 3. Call `get_app` with `app_id` and copy its `environment` object without showing it. Call `update_app` with `app_id` and body `{"image":"127.0.0.1:5000/APP_NAME:TAG","environment":<that object>}`, so the redeploy keeps every variable including the key.
-4. The panel names the container after the app, so `APP_NAME` is the container name. Call `create_recipe` with name `hk-verify-RUN`, description `Verify`, and this exact command script with `APP_NAME` and `TAG` substituted. Install it and poll its workflow at most 6 times pausing 10 seconds. `COMPLETED` means the new image is running. `FAILED` means not yet: pause 10 seconds and install again, at most 8 times in total. If none completes, tell the user the panel did not swap the container within five minutes, leave the app as it is, and stop.
+4. The panel names the container after the app, so `APP_NAME` is the container name. Call `create_recipe` with name `hk-verify-RUN`, description `Verify`, and this exact command script with `APP_NAME` and `TAG` substituted. Install it and poll its workflow at most 8 times pausing 10 seconds. `COMPLETED` means the new image is running. Anything else means not yet: pause 10 seconds and install again, at most 8 times in total. If none completes, tell the user the panel did not swap the container within seven minutes, leave the app as it is, and stop.
 
 ```
 for i in $(seq 1 35); do [ "$(docker inspect -f '{{.Config.Image}}' APP_NAME 2>/dev/null)" = "127.0.0.1:5000/APP_NAME:TAG" ] && exit 0; sleep 1; done; exit 1
 ```
 
-5. Request `https://APP_DOMAIN/` with `curl --silent --head --max-time 20 https://APP_DOMAIN/` until the first line shows a status below 500, at most 12 times pausing 10 seconds. If all 12 fail, call `get_app_logs` with `app_id` and tail 100, show it with the key redacted, and stop. Then run step 10.1 once; if it prints `"runpod_key_set":false`, the redeploy dropped the environment, so repeat item 3 with the environment copied from `HACKATHON.md`'s app and the key the user gives you again. A route the user removed is not a failure.
+5. Request `https://APP_DOMAIN/` with `curl --silent --head --max-time 20 https://APP_DOMAIN/` until the first line shows a status below 500, at most 12 times pausing 10 seconds. If all 12 fail, call `get_app_logs` with `app_id` and tail 100, show it with the key redacted, and stop. Then run step 10.1 once. If it prints `"runpod_key_set":false`, the redeploy lost the key: ask the user to paste their RunPod key again, call `get_app`, and repeat item 3 with that key added to the environment you read back. Never write the key into `HACKATHON.md` or any other file. A route the user removed is not a failure.
 
 ## Other later requests
 
