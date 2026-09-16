@@ -100,15 +100,14 @@ html, body, #app { background: var(--bg); }
 }
 
 /* ---------- code ---------- */
-:not(pre) > code {
-  font-family: var(--mono);
+.slidev-layout :not(pre) > code, :not(pre) > code {
+  font-family: var(--mono) !important;
   font-feature-settings: "liga" 0, "calt" 0;
   color: var(--fg);
   background: rgba(255, 255, 255, 0.09);
   border-radius: 3px;
   padding: 1px 4px;
-  margin-left: -2px;
-  margin-right: -4px;
+  margin: 0 1px;
   font-size: 0.9em;
   white-space: nowrap;
 }
@@ -139,7 +138,6 @@ html, body, #app { background: var(--bg); }
 .nb { white-space: nowrap; }
 /* one paste block holds a URL too long for 21px; it gets its own size */
 .slidev-layout pre.code.tight { font-size: 17px; }
-.slidev-layout pre.code.tighter { font-size: 15.5px; }
 
 /* ---------- screenshots ---------- */
 .shotwrap {
@@ -150,7 +148,7 @@ html, body, #app { background: var(--bg); }
   justify-content: flex-start;
 }
 .shot {
-  max-width: 100%;
+  max-width: 780px;
   max-height: 100%;
   display: block;
   border: 1px solid var(--line);
@@ -164,7 +162,7 @@ html, body, #app { background: var(--bg); }
   bottom: 14px;
   z-index: 10;
   font-family: var(--sans);
-  font-size: 16px;
+  font-size: 18px;
   color: #8d95b0;
   font-variant-numeric: tabular-nums;
 }
@@ -177,8 +175,9 @@ html, body, #app { background: var(--bg); }
   font-size: 42px; line-height: 1.12; font-weight: 600;
   border-bottom: none; margin: 0 0 18px; padding: 0; letter-spacing: -0.01em;
 }
-.cover-text .sub { font-size: 17px; color: #aab0c4; margin: 0 0 12px; }
+.cover-text .sub { font-size: 20px; color: #e6e9f2 !important; opacity: 1; margin: 0 0 12px; }
 .cover-text .url { font-size: 21px; color: #e6e9f2; margin: 0; white-space: nowrap; }
+.cover-text .url2 { font-size: 18px; color: #aab0c4; margin: 8px 0 0; white-space: nowrap; }
 .qr-tile {
   flex: 0 0 auto;
   background: #ffffff;
@@ -186,3 +185,15 @@ html, body, #app { background: var(--bg); }
   border-radius: 6px;
 }
 .qr-tile img { width: 290px; height: 290px; display: block; }
+
+/* ---------- demo slide: text beside a phone screenshot ---------- */
+.withshot { display: flex; gap: 28px; align-items: flex-start; }
+.withshot .col { flex: 1 1 auto; min-width: 0; }
+.withshot .phone {
+  flex: 0 0 auto;
+  height: 372px;
+  width: auto;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}

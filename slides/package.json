@@ -1,0 +1,1 @@
+{ "name": "philly-hackathon-deck", "private": true, "scripts": { "dev": "slidev slides.md --port 3030", "export": "slidev export slides.md", "build": "slidev build slides.md" } }
