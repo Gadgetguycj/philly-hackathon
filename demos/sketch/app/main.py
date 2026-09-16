@@ -33,6 +33,8 @@ SITES_DIR = DATA_DIR / "sites"
 DB_PATH = DATA_DIR / "sketch.db"
 SITE_ID_ALPHABET = string.ascii_letters + string.digits
 SITE_ID_PATTERN = re.compile(r"^[A-Za-z0-9]{10}$")
+# How long an outright refusal has to arrive before the reply starts streaming as HTTP 200.
+ERROR_GRACE_SECONDS = 1.0
 PAGE_HEADERS = {
     "Content-Security-Policy": "default-src 'none'; style-src 'unsafe-inline'; img-src data:",
     "X-Frame-Options": "SAMEORIGIN",
@@ -237,7 +239,7 @@ async def build_page(image: UploadFile = File(...), notes: str = Form("")):
     tokens = stream_page(jpeg_data_url(photo), notes, reported)
     interval = keepalive_interval()
     first_token = asyncio.ensure_future(anext(tokens))
-    done, _ = await asyncio.wait({first_token}, timeout=interval)
+    done, _ = await asyncio.wait({first_token}, timeout=min(interval, ERROR_GRACE_SECONDS))
     if done and first_token.exception() is not None:
         await release()
         return JSONResponse(status_code=502, content={"detail": upstream_detail(first_token.exception())})

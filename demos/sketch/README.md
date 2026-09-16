@@ -27,7 +27,9 @@ Open `http://127.0.0.1:8000/` on a phone, take a photo of a sketch, and the page
 | `GET /sites` | Every page built so far, newest first, with the sketch it came from. |
 | `GET /health`, `GET /api/usage` | Configuration and the hourly generation count. |
 
-The response body of `POST /api/sketch` is one JSON object. The server flushes a single whitespace byte the moment the model starts writing, which is how the phone switches from "GPU is waking up" to "Writing your page". An upstream failure before that first byte returns HTTP 502 with the upstream body unchanged.
+The response body of `POST /api/sketch` is one JSON object. While the GPU is still waking, the server flushes a newline every `KEEPALIVE_INTERVAL_SECONDS`, because Cloudflare answers 524 when an origin sends no byte for 100 seconds and a cold start takes minutes. Leading whitespace is legal in front of a JSON document, so the body is still parsed as one object. A single space follows the moment the model starts writing, which is how the phone switches from "GPU is waking up" to "Writing your page". An upstream failure inside the first interval returns HTTP 502 with the upstream body unchanged, and a later failure arrives as `{"detail": ...}` in the streamed object.
+
+A request that builds no page gives its slot of the hourly cap back, so a run of cold-start failures cannot lock a team out of their own app.
 
 ## Settings
 
@@ -38,7 +40,8 @@ The response body of `POST /api/sketch` is one JSON object. The server flushes a
 | `LLM_BASE_URL` | from the endpoint id | OpenAI-compatible base URL. |
 | `LLM_MODEL` | `Qwen/Qwen2.5-VL-7B-Instruct` | Vision model name sent in the request. |
 | `MAX_GENERATIONS_PER_HOUR` | `20` | Hourly cap, counted in SQLite. |
-| `REQUEST_TIMEOUT_SECONDS` | `240` | Read timeout for the model call. |
+| `REQUEST_TIMEOUT_SECONDS` | `900` | Read timeout for the model call. |
+| `KEEPALIVE_INTERVAL_SECONDS` | `10` | Gap between the whitespace bytes sent while the model is thinking. |
 | `DATA_DIR` | `/data` | Holds `sketch.db` and `sites/<id>/`. |
 
 ## GalaxyGate create_app body

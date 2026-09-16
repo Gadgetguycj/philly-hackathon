@@ -12,8 +12,8 @@ from tests.conftest import REAL_ASYNC_CLIENT
 
 SAMPLE = Path(__file__).resolve().parent.parent / "samples" / "sketch.jpg"
 
-# One second of a scenario runs as SCALE real seconds, so a 25 second cold start takes a quarter of a second.
-SCALE = 0.01
+# One second of a scenario runs as SCALE real seconds, so a 25 second cold start takes half a second.
+SCALE = 0.02
 
 HTML_EVENTS = (
     '{"choices":[{"delta":{"content":"```html\\n<!doctype html>\\n<html><head><style>'
@@ -76,11 +76,22 @@ def sketch_chunks(notes: str = "") -> tuple[dict, list[bytes]]:
     messages: list[dict] = []
 
     async def run():
+        sent = False
+        finished = asyncio.Event()
+
         async def receive():
+            # The request arrives once. After that the app waits here, as it does behind a real server.
+            nonlocal sent
+            if sent:
+                await finished.wait()
+                return {"type": "http.disconnect"}
+            sent = True
             return {"type": "http.request", "body": payload, "more_body": False}
 
         async def send(message):
             messages.append(message)
+            if message["type"] == "http.response.body" and not message.get("more_body", False):
+                finished.set()
 
         await main.app(scope, receive, send)
 

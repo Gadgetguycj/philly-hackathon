@@ -19,7 +19,7 @@ print("health ok")
 ' "$expected_key" "$expected_model"
 
 if [ -n "${RUNPOD_API_KEY:-}" ] && [ -n "${LLM_BASE_URL:-}" ]; then
-  curl --fail --silent --show-error --max-time "${REQUEST_TIMEOUT_SECONDS:-240}" \
+  curl --fail --silent --show-error --max-time "${REQUEST_TIMEOUT_SECONDS:-900}" \
     -F "image=@$SKETCH" -F "notes=${NOTES:-}" "$BASE_URL/api/sketch" | python3 -c '
 import json, sys
 result = json.load(sys.stdin)
