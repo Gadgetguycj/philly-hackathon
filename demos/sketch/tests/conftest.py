@@ -1,3 +1,5 @@
+import asyncio
+
 import httpx
 import pytest
 from fastapi import FastAPI, Request
@@ -19,6 +21,7 @@ def upstream_server(
     fail_body: str = "worker cold start failed",
     events: tuple[str, ...] = DEFAULT_EVENTS,
     received: list | None = None,
+    first_token_delay: float = 0.0,
 ) -> FastAPI:
     """A stand-in for the RunPod endpoint. Tests only; the app always calls the real upstream."""
     server = FastAPI()
@@ -34,6 +37,8 @@ def upstream_server(
             return PlainTextResponse(fail_body, status_code=fail_status)
 
         async def stream():
+            if first_token_delay:
+                await asyncio.sleep(first_token_delay)
             for item in events:
                 yield f"data: {item}\n\n"
 

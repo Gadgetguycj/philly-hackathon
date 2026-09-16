@@ -27,16 +27,17 @@ photo.addEventListener('change', () => {
   preview.hidden = false;
 });
 
-async function readResponse(response, onFirstByte) {
+async function readResponse(response, onWriting) {
   const reader = response.body.getReader();
   const decoder = new TextDecoder();
   let text = '';
-  let first = true;
+  let writing = false;
   while (true) {
     const { value, done } = await reader.read();
     if (done) break;
-    if (first) { onFirstByte(); first = false; }
     text += decoder.decode(value, { stream: true });
+    // Newlines are the keep-alive bytes sent while the GPU wakes. The space means the model started writing.
+    if (!writing && text.includes(' ')) { writing = true; onWriting(); }
   }
   return JSON.parse(text + decoder.decode());
 }

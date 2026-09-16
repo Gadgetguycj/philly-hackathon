@@ -16,7 +16,15 @@ from fastapi import FastAPI, File, Form, HTTPException, UploadFile
 from fastapi.responses import FileResponse, HTMLResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 
-from .core import MAX_NOTES_CHARS, downscale_jpeg, extract_html, jpeg_data_url, llm_model, stream_page
+from .core import (
+    MAX_NOTES_CHARS,
+    downscale_jpeg,
+    extract_html,
+    jpeg_data_url,
+    keepalive_interval,
+    llm_model,
+    stream_page,
+)
 
 APP_DIR = Path(__file__).parent
 STATIC_DIR = APP_DIR / "static"
@@ -80,7 +88,8 @@ def generation_usage(now: datetime | None = None) -> int:
         )
 
 
-def reserve_generation() -> tuple[bool, datetime | None]:
+def reserve_generation() -> tuple[int | None, datetime | None]:
+    """Takes one slot of the hourly cap. Returns its id, or None and the time the cap lifts."""
     now = utc_now()
     cutoff = (now - timedelta(hours=1)).isoformat()
     with sqlite3.connect(DB_PATH) as connection:
@@ -89,9 +98,17 @@ def reserve_generation() -> tuple[bool, datetime | None]:
             "SELECT created_at FROM generation_requests WHERE created_at > ? ORDER BY created_at", (cutoff,)
         ).fetchall()
         if len(rows) >= generation_limit():
-            return False, datetime.fromisoformat(rows[0][0]) + timedelta(hours=1)
-        connection.execute("INSERT INTO generation_requests (created_at) VALUES (?)", (now.isoformat(),))
-    return True, None
+            return None, datetime.fromisoformat(rows[0][0]) + timedelta(hours=1)
+        request_id = connection.execute(
+            "INSERT INTO generation_requests (created_at) VALUES (?)", (now.isoformat(),)
+        ).lastrowid
+    return request_id, None
+
+
+def release_generation(request_id: int) -> None:
+    """Gives the slot back. A request that built no page must not count against the cap."""
+    with sqlite3.connect(DB_PATH) as connection:
+        connection.execute("DELETE FROM generation_requests WHERE id = ?", (request_id,))
 
 
 def new_site_id() -> str:
@@ -184,12 +201,20 @@ async def site_page(site_id: str) -> FileResponse:
     return FileResponse(site_file(site_id, "index.html"), media_type="text/html", headers=PAGE_HEADERS)
 
 
+def upstream_detail(exc: BaseException) -> str:
+    if isinstance(exc, StopAsyncIteration):
+        return "The model returned an empty response."
+    if isinstance(exc, httpx.HTTPError):
+        return f"The model request failed: {exc}"
+    return str(exc)
+
+
 @app.post("/api/sketch")
 async def build_page(image: UploadFile = File(...), notes: str = Form("")):
     started = time.monotonic()
     notes = notes.strip()[:MAX_NOTES_CHARS]
-    allowed, resets_at = await asyncio.to_thread(reserve_generation)
-    if not allowed:
+    request_id, resets_at = await asyncio.to_thread(reserve_generation)
+    if request_id is None:
         return JSONResponse(
             status_code=429,
             content={
@@ -197,33 +222,48 @@ async def build_page(image: UploadFile = File(...), notes: str = Form("")):
                 "resets_at": resets_at.isoformat() if resets_at else None,
             },
         )
+
+    async def release() -> None:
+        await asyncio.to_thread(release_generation, request_id)
+
     upload = await image.read()
     try:
         photo = await asyncio.to_thread(downscale_jpeg, upload)
     except ValueError as exc:
+        await release()
         return JSONResponse(status_code=400, content={"detail": str(exc)})
 
     reported: dict = {}
     tokens = stream_page(jpeg_data_url(photo), notes, reported)
-    try:
-        first = await anext(tokens)
-    except StopAsyncIteration:
-        return JSONResponse(status_code=502, content={"detail": "The model returned an empty response."})
-    except RuntimeError as exc:
-        return JSONResponse(status_code=502, content={"detail": str(exc)})
-    except httpx.HTTPError as exc:
-        return JSONResponse(status_code=502, content={"detail": f"The model request failed: {exc}"})
+    interval = keepalive_interval()
+    first_token = asyncio.ensure_future(anext(tokens))
+    done, _ = await asyncio.wait({first_token}, timeout=interval)
+    if done and first_token.exception() is not None:
+        await release()
+        return JSONResponse(status_code=502, content={"detail": upstream_detail(first_token.exception())})
 
     async def body():
-        # The leading space tells the browser the model started writing. The body stays one JSON object.
+        # A cold GPU can take minutes, and Cloudflare drops a connection that sends no byte for
+        # 100 seconds. A newline every interval keeps the bytes flowing, and leading whitespace
+        # is legal in front of a JSON document, so the body is still one JSON object.
+        while not first_token.done():
+            yield "\n"
+            await asyncio.wait({first_token}, timeout=interval)
+        failure = first_token.exception()
+        if failure is not None:
+            await release()
+            yield json.dumps({"detail": upstream_detail(failure)})
+            return
+        # The space tells the browser the model started writing.
         yield " "
-        parts = [first]
+        parts = [first_token.result()]
         try:
             async for token in tokens:
                 parts.append(token)
             html = extract_html("".join(parts))
             site_id = await asyncio.to_thread(save_site, html, photo, notes, reported.get("total_tokens"))
         except (RuntimeError, httpx.HTTPError, OSError) as exc:
+            await release()
             yield json.dumps({"detail": str(exc)})
             return
         yield json.dumps(
