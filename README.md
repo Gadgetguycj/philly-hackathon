@@ -7,4 +7,4 @@ Coffee & Code Philadelphia AI Agent Hackathon.
 - `demos/` holds the two demo apps: [Sketch to Site](demos/sketch) turns a phone photo of a website sketch into a hosted web page with a vision model on RunPod, [The Sticker Wall](demos/stickerwall) draws team stickers with Flux onto a shared wall.
 - `qr/` holds the QR codes that open this guide.
 - `ci/publish.yml` builds and pushes both demo images to GHCR. It lives outside `.github/workflows` until it is pushed by a token with the workflow scope.
-- `slides/` holds the intro deck as a Slidev source (`slides.md`), its exported `deck.pdf`, and the assets it uses. The live version is at https://galaxygate.github.io/philly-hackathon/.
+- `slides/` holds the intro deck as a Slidev source (`slides.md`), its exported `deck.pdf`, and the assets it uses. https://galaxygate.github.io/philly-hackathon/ serves that deck, not the guide; the guide is `GUIDE.md` in this repository.

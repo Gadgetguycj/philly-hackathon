@@ -12,7 +12,7 @@ Use the coding tool you already have. Any of these can do everything in this gui
 
 - **Cursor.** Desktop: download from https://cursor.com/download, sign in, then File, Open Folder, and choose a new empty folder named `hackathon` (create it on your Desktop first). Web: open https://cursor.com/agents; cloud agents need a paid Cursor plan. If you received a Cursor credit code card at the GalaxyGate table, redeem it at the link on the card first.
 - **Claude Code.** Desktop app or terminal, opened in an empty folder named `hackathon`. Web: https://claude.ai/code, connected to a GitHub repository of yours (any empty repository works).
-- **Codex.** Desktop app or terminal, opened in an empty folder named `hackathon`. Codex on the web cannot connect MCP servers, so use the desktop or terminal version.
+- **Codex.** Terminal, opened in an empty folder named `hackathon`; step 4 below is written for the terminal. Codex on the web cannot connect MCP servers.
 
 If you have none of these, use Cursor.
 
@@ -45,7 +45,7 @@ Both servers sign you in through a browser window. There is no key to paste for 
 }
 ```
 
-Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on. While the agent works, Cursor asks you to approve commands that reach your own server; approve them.
+Save, restart Cursor, open Customize in the sidebar, then MCP. Each of the two servers shows Needs login. Click it, approve in the browser tab that opens, come back, and check the toggle next to each server is on. While the agent works, Cursor asks you to approve commands that reach your own server; approve them as they appear. Setup has long waits, so stay at the laptop: if you walk away, Cursor stops at the first prompt and waits without saying so.
 
 **Cursor web.** At https://cursor.com/agents open the MCP dropdown, add each address as an HTTP server, and complete the sign-in each one asks for.
 
@@ -115,13 +115,13 @@ To put your changes on your server, tell your agent: `Fetch https://raw.githubus
 
 ### Use a GPU model from your app
 
-Your own endpoint. Your agent already created a serverless endpoint named `hackathon-vl` running `Qwen/Qwen2.5-VL-7B-Instruct`, a vision-language model that reads images and text. Your app calls it at `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` exactly like the OpenAI chat API, with your RunPod key, and an image goes in as an `image_url` content part holding a `data:image/jpeg;base64,...` URL. To run a different Hugging Face model, tell your agent: `Using the RunPod MCP, create a serverless endpoint named hackathon-llm with image runpod/worker-v1-vllm:v2.27.0 on the ADA_24 pool, workers min 0 max 1, idle timeout 60, env MODEL_NAME=<model> and MAX_MODEL_LEN=8192, then send it one chat completion and show me the reply and the endpoint id.` The first request after a quiet period waits while the model loads; keep your app's timeout above two minutes.
+Your own endpoint. Your agent already created a serverless endpoint named `hackathon-vl` running `Qwen/Qwen2.5-VL-7B-Instruct`, a vision-language model that reads images and text. Your app calls it at `https://api.runpod.ai/v2/<ENDPOINT_ID>/openai/v1/chat/completions` exactly like the OpenAI chat API, with your RunPod key, and an image goes in as an `image_url` content part holding a `data:image/jpeg;base64,...` URL. To run a different Hugging Face model, tell your agent: `Using the RunPod MCP, create a serverless endpoint named hackathon-llm with image runpod/worker-v1-vllm:v2.27.0 on the ADA_24 pool, container disk 80 GB, workers min 0 max 1, idle timeout 60, env MODEL_NAME=<model> and MAX_MODEL_LEN=8192, then send it one chat completion and show me the reply and the endpoint id.` The first request after a quiet period waits while the model loads; keep your app's timeout above two minutes.
 
 Ready-made models, no deployment. Tell your agent: `Add a route to my app that generates an image with RunPod's Flux Schnell public endpoint using the RUNPOD_API_KEY from the environment, saves the image under /data, and shows it on a page.` The endpoint is `https://api.runpod.ai/v2/black-forest-labs-flux-1-schnell/runsync`; it takes `{"input":{"prompt":"...","width":768,"height":768}}` with the key as a bearer token, width and height between 256 and 1536 and divisible by 64, and returns the image URL at `output.image_url`. Text-to-speech, text models, and other ready-made models are listed at https://docs.runpod.io/public-endpoints/overview.
 
 ### Spending
 
-The demo app caps itself at 20 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable. Keep a cap in anything you build. Your endpoint scales to zero when idle. It bills for the whole time a worker is running, including the model load and the idle minute after a request. The first request after a quiet period is slow while the model loads, so send one generation through your app yourself right before a judge tries it. Check your RunPod balance in the console before you submit.
+The demo app caps itself at 20 generations per hour so a stranger cannot drain your credit; the cap is the `MAX_GENERATIONS_PER_HOUR` environment variable, and it counts every visitor together. Open `/api/usage` on your URL to see what is left, and ask your agent to raise the cap for the judging window if you used it up testing. Keep a cap in anything you build. Your endpoint scales to zero when idle. It bills for the whole time a worker is running, including the model load and the idle minute after a request. The first request after a quiet period is slow while the model loads, so send one generation through your app yourself right before a judge tries it. Check your RunPod balance in the console before you submit.
 
 ## Part 3. Submit
 
@@ -162,7 +162,7 @@ Extra credit, up to 15 points on top:
 - **More of GalaxyGate, 5 each, up to 10.** A second server doing real work, private networking between servers, a floating IP, a scheduled backup or snapshot, or a load balancer, each used for a reason the judge can see.
 - **More of RunPod, 5.** A second endpoint or model, a network volume, or a pod used for training or a batch job, used for a reason the judge can see.
 
-Ties break on Simple to use, then Reliable. If your app is down when judges reach you, you have the rest of the judging window to bring it back. A timestamped end-to-end recording earns the Secure, Scalable and Agentic points and nothing else, because every other category is scored from a judge's own input.
+Ties break on Simple to use, then Reliable. If your app is down when judges reach you, you have the rest of the judging window to bring it back; an app that never comes back misses the first requirement above and is not judged in this track. If it comes back, a timestamped end-to-end recording covers only the Secure, Scalable and Agentic points, because every other category is scored from a judge's own input.
 
 ## When something fails
 

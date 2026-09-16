@@ -57,10 +57,11 @@ Replace the uppercase values before calling `create_app` on the target instance.
     "RUNPOD_API_KEY": "RUNPOD_API_KEY",
     "RUNPOD_ENDPOINT_ID": "RUNPOD_ENDPOINT_ID",
     "LLM_MODEL": "Qwen/Qwen2.5-VL-7B-Instruct",
-    "MAX_GENERATIONS_PER_HOUR": "20"
+    "MAX_GENERATIONS_PER_HOUR": "20",
+    "REQUEST_TIMEOUT_SECONDS": "900"
   },
   "mounts": [{"host_path": "/data/sketch", "container_path": "/data", "read_only": false}],
-  "domain": "TEAM_NAME-sketch.galaxygate.app"
+  "domain": "TEAM_NAME.galaxygate.app"
 }
 ```
 
