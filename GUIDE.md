@@ -69,6 +69,12 @@ codex mcp add runpod --url https://mcp.getrunpod.io/
 codex mcp login runpod
 ```
 
+Start Codex with network access on, or every check in step 5 asks for approval:
+
+```bash
+codex -c sandbox_workspace_write.network_access=true
+```
+
 **Check.** Paste this into your tool: `Call the GalaxyGate list_workspaces tool and the RunPod list-endpoints tool and show me both results.` You should see one GalaxyGate workspace with your name on it, and a RunPod endpoint list, which may be empty. If either call is denied, redo the sign-in for that server.
 
 ### 5. Create your server, your GPU endpoint, and the demo
@@ -79,7 +85,7 @@ Replace `yourteam` with your team name: 3 to 32 characters, lowercase letters, d
 TEAM_NAME=yourteam
 RUNPOD_API_KEY=rpa_paste-your-key-here
 
-Read https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if the page does not load.
+Fetch https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md, with curl if you have no tool for web pages, and follow it step by step. Stop and tell me if it does not load.
 ```
 
 If your tool cannot open web pages, open https://github.com/GalaxyGate/philly-hackathon/blob/main/AGENT.md yourself, copy its whole text, and paste it under the two lines instead.
