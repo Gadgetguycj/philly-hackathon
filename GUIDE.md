@@ -25,7 +25,7 @@ If you have none of these, use Cursor.
 ### 3. Create your RunPod account and one API key
 
 1. Sign up at https://console.runpod.io/signup.
-2. Open the RunPod credit link from your check-in email and redeem it. Your balance should read $15.
+2. Open https://runpod.galaxygate.app and follow it. It gives you your own $15 credit link, and it is where you enter the RunPod swag raffle. Redeem the link, then check your balance reads $15.
 3. In the console open Settings, expand API Keys, click Create API Key. Name it `hackathon-app`, choose the permission `All`, create it, and copy the key now. RunPod shows it only once. You paste it into the prompt in step 5.
 
 This key can spend your credit. It goes into your app's environment on your server, never into your code or your repository. Revoke it on the same page after the event. Your agent needs the `All` permission once, to create your endpoint. After that you can create a second key with only the permission your app needs and ask the agent to put that one in the app's environment; the Secure score in Part 3 rewards this.
