@@ -1,0 +1,253 @@
+/* Palette, type scale and button treatment come from the signup site at
+   runpod.galaxygate.app (app/static/style.css). */
+:root {
+  --bg: #0b0d12;
+  --card: #151922;
+  --sunk: #0e1219;
+  --edge: #2a3040;
+  --text: #f2f4f8;
+  --muted: #b9c0cf;
+  --quiet: #939cae;
+  --accent: #6ee7a8;
+  --accent-ink: #06210f;
+  --radius: 14px;
+  --bar: 52px;
+}
+
+* { box-sizing: border-box; }
+
+html {
+  background: var(--bg);
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: calc(var(--bar) + 12px);
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 17px;
+  line-height: 1.55;
+  overflow-wrap: break-word;
+}
+
+/* Contents bar */
+
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  background: var(--bg);
+  border-bottom: 1px solid var(--edge);
+}
+
+.toc summary {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--bar);
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 650;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+  cursor: pointer;
+  list-style: none;
+}
+
+.toc summary::-webkit-details-marker { display: none; }
+
+.toc summary::before {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: rotate(45deg) translateY(-2px);
+}
+
+.toc[open] summary::before { transform: rotate(-135deg) translateY(-2px); }
+
+.toc nav {
+  max-height: 65vh;
+  overflow-y: auto;
+  padding: 4px 16px 16px;
+  border-top: 1px solid var(--edge);
+}
+
+.toc ul { margin: 0; padding: 0; list-style: none; }
+.toc ul ul { padding-left: 14px; }
+
+.toc a {
+  display: block;
+  padding: 10px 0;
+  color: var(--text);
+  font-size: 16px;
+  text-decoration: none;
+  border-bottom: 1px solid #1b2130;
+}
+
+.toc ul ul a { color: var(--muted); font-size: 15px; }
+.toc a:hover { color: var(--accent); }
+
+/* Guide */
+
+#guide {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 22px 16px 8px;
+}
+
+h1, h2, h3 { line-height: 1.22; }
+
+h1 {
+  margin: 0 0 14px;
+  font-size: 27px;
+}
+
+h2 {
+  margin: 40px 0 12px;
+  padding-top: 20px;
+  border-top: 1px solid var(--edge);
+  font-size: 22px;
+}
+
+h3 {
+  margin: 30px 0 10px;
+  font-size: 19px;
+  color: var(--accent);
+}
+
+p, li { margin: 0 0 14px; }
+ul, ol { padding-left: 22px; }
+li > ul, li > ol { margin-top: 10px; }
+strong { font-weight: 650; }
+
+a { color: var(--accent); text-decoration-thickness: 1px; text-underline-offset: 3px; }
+
+.headerlink {
+  margin-left: 8px;
+  color: var(--quiet);
+  font-size: 0.7em;
+  text-decoration: none;
+}
+
+code {
+  padding: 2px 5px;
+  background: var(--sunk);
+  border: 1px solid var(--edge);
+  border-radius: 6px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.86em;
+  overflow-wrap: anywhere;
+}
+
+/* Code blocks */
+
+.code {
+  margin: 0 0 18px;
+  background: var(--card);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.code-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 6px 6px 6px 14px;
+  background: #11151d;
+  border-bottom: 1px solid var(--edge);
+}
+
+.code-lang {
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--quiet);
+}
+
+.copy {
+  min-height: 40px;
+  padding: 8px 18px;
+  background: #202634;
+  color: var(--text);
+  border: 1px solid var(--edge);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 15px;
+  font-weight: 650;
+  cursor: pointer;
+}
+
+.copy:hover { background: #283044; }
+.copy.done { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.copy.failed { background: #2a1614; color: #ffb3ad; border-color: #7a3b38; }
+
+.code pre {
+  margin: 0;
+  padding: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.code pre code {
+  display: block;
+  padding: 0;
+  background: none;
+  border: 0;
+  border-radius: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  white-space: pre;
+  color: var(--text);
+  overflow-wrap: normal;
+}
+
+a:focus-visible, .copy:focus-visible, summary:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* Footer */
+
+.foot {
+  display: flex;
+  gap: 24px;
+  max-width: 720px;
+  margin: 24px auto 0;
+  padding: 18px 16px 34px;
+  border-top: 1px solid var(--edge);
+  font-size: 15px;
+}
+
+@media (max-width: 380px) {
+  body { font-size: 16px; }
+  #guide { padding: 18px 12px 8px; }
+  h1 { font-size: 24px; }
+  h2 { font-size: 20px; }
+  .code pre { padding: 12px; }
+}
+
+/* Wide screens put the contents beside the guide instead of above it. */
+@media (min-width: 1000px) {
+  body {
+    display: grid;
+    grid-template-columns: 300px minmax(0, 1fr);
+  }
+  .top {
+    grid-row: 1 / 3;
+    align-self: start;
+    max-height: 100vh;
+    overflow-y: auto;
+    border-right: 1px solid var(--edge);
+    border-bottom: 0;
+  }
+  .toc nav { max-height: none; overflow: visible; }
+  #guide { padding: 34px 40px 8px; }
+  .foot { margin-left: 0; padding-left: 40px; }
+}

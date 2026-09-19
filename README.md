@@ -8,3 +8,4 @@ Coffee & Code Philadelphia AI Agent Hackathon.
 - `qr/` holds the QR codes that open this guide.
 - `ci/publish.yml` builds and pushes both demo images to GHCR. It lives outside `.github/workflows` until it is pushed by a token with the workflow scope.
 - `slides/` holds the intro deck as a Slidev source (`slides.md`), its exported `deck.pdf`, and the assets it uses. https://galaxygate.github.io/philly-hackathon/ serves that deck, not the guide; the guide is `GUIDE.md` in this repository.
+- `site/` renders `GUIDE.md` into the one page website at https://runpodtrack.galaxygate.app. Build it with `docker build -f site/Dockerfile -t runpodtrack-site .` and check it with `python3 site/test.py`.
