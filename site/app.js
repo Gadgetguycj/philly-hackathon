@@ -93,6 +93,34 @@
     wire(blocks[i]);
   }
 
+  // A tool section is a closed dropdown, so a contents link into one has to
+  // open it before the browser can land on the heading.
+  function openTarget() {
+    var hash = window.location.hash;
+    if (!hash || hash.length < 2) {
+      return;
+    }
+    var target = document.getElementById(hash.slice(1));
+    if (!target) {
+      return;
+    }
+    var node = target.parentElement;
+    var opened = false;
+    while (node) {
+      if (node.tagName === "DETAILS" && !node.open) {
+        node.open = true;
+        opened = true;
+      }
+      node = node.parentElement;
+    }
+    if (opened && target.scrollIntoView) {
+      target.scrollIntoView();
+    }
+  }
+
+  window.addEventListener("hashchange", openTarget);
+  openTarget();
+
   // The contents list ships closed so it never pushes the guide off a phone
   // screen. On a wide screen it becomes a sidebar, where open is the useful
   // state.

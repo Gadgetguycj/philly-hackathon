@@ -12,6 +12,9 @@
   --accent-ink: #06210f;
   --radius: 14px;
   --bar: 52px;
+  --panel: #10141c;
+  --thumb: #333c4e;
+  --thumb-hover: #45506a;
 }
 
 * { box-sizing: border-box; }
@@ -21,6 +24,31 @@ html {
   -webkit-text-size-adjust: 100%;
   scroll-padding-top: calc(var(--bar) + 12px);
 }
+
+/* Scrollbars: thin, rounded, and close to the background. Firefox takes the
+   two standard properties and inherits them, WebKit takes the pseudo
+   elements. The thumb carries a border in the colour behind it, which is what
+   makes a 10px track read as a slim rounded line. */
+
+html, .toc nav, .code pre, details.tool {
+  scrollbar-width: thin;
+  scrollbar-color: var(--thumb) transparent;
+}
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-corner { background: transparent; }
+
+::-webkit-scrollbar-thumb {
+  background: var(--thumb);
+  border: 3px solid var(--bg);
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover { background: var(--thumb-hover); }
+
+.code pre::-webkit-scrollbar-thumb { border-color: var(--card); }
+.code pre::-webkit-scrollbar { height: 9px; }
 
 body {
   margin: 0;
@@ -143,6 +171,52 @@ code {
   font-size: 0.86em;
   overflow-wrap: anywhere;
 }
+
+/* Tool dropdowns, one per coding tool */
+
+details.tool {
+  margin: 20px 0;
+  background: var(--panel);
+  border: 1px solid var(--edge);
+  border-radius: var(--radius);
+}
+
+details.tool > summary {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 66px;
+  padding: 0 16px;
+  cursor: pointer;
+  list-style: none;
+}
+
+details.tool > summary::-webkit-details-marker { display: none; }
+
+details.tool > summary h2 {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  font-size: 20px;
+  color: var(--text);
+}
+
+details.tool > summary::after {
+  content: "";
+  flex: none;
+  margin-left: auto;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--accent);
+  border-bottom: 2px solid var(--accent);
+  transform: rotate(45deg) translateY(-3px);
+}
+
+details.tool[open] > summary::after { transform: rotate(-135deg) translateY(-3px); }
+details.tool[open] > summary { border-bottom: 1px solid var(--edge); }
+
+.tool-body { padding: 16px 16px 2px; }
+.tool-body > *:last-child { margin-bottom: 14px; }
 
 /* Code blocks */
 

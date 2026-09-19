@@ -4,8 +4,9 @@
   python3 site/test.py [base-url]        default http://127.0.0.1:8080
 
 Three things matter and are checked here. The page serves. Every fenced code
-block, the step 5 paste block above all, is present character for character.
-No repository-relative link survives in the output.
+block, the three tool paste blocks above all, is present character for
+character, and each tool section is a closed dropdown. No repository-relative
+link survives in the output.
 """
 
 import html
@@ -43,14 +44,21 @@ def guide_fences(source):
     return [match.group(1) for match in FENCE.finditer(source)]
 
 
-def step5_fence(source):
-    head = re.search(r"^### 5\..*$", source, re.MULTILINE)
-    if not head:
-        raise SystemExit("no step 5 heading in GUIDE.md")
-    match = FENCE.search(source, head.end())
-    if not match:
-        raise SystemExit("no fenced block after the step 5 heading")
-    return match.group(1)
+def tool_sections(source):
+    """Map each "## Using <tool>" heading to the paste block it ends with."""
+    heads = list(re.finditer(r"^## (Using [^\n]+)$", source, re.MULTILINE))
+    if not heads:
+        raise SystemExit("no '## Using <tool>' section in GUIDE.md")
+    starts = [match.start() for match in re.finditer(r"^## ", source, re.MULTILINE)]
+    sections = []
+    for head in heads:
+        later = [start for start in starts if start > head.start()]
+        body = source[head.end():later[0] if later else len(source)]
+        fences = [match.group(1) for match in FENCE.finditer(body)]
+        if not fences:
+            raise SystemExit("no code block in section " + head.group(1))
+        sections.append((head.group(1).strip(), fences[-1]))
+    return sections
 
 
 def main():
@@ -69,7 +77,7 @@ def main():
     check("/health returns 200", status == "200" and health.strip() == "ok",
           "status {} body {!r}".format(status, health.strip()))
 
-    # 2. Every fenced block survives verbatim, step 5 named on its own.
+    # 2. Every fenced block survives verbatim.
     served = [html.unescape(body) for body in CODE_BLOCK.findall(page)]
     fences = guide_fences(source)
     check("code block count matches the guide",
@@ -78,11 +86,30 @@ def main():
     missing = [text[:40] for text in fences if text not in served]
     check("every fenced block is verbatim", not missing, "missing " + repr(missing))
 
-    step5 = step5_fence(source)
-    exact = [text for text in served if text == step5]
-    check("step 5 paste block is character for character identical",
-          len(exact) == 1,
-          "{} of {} chars matched".format(len(step5) if exact else 0, len(step5)))
+    # 2b. Each tool section is its own closed dropdown, ending in its prompt.
+    sections = tool_sections(source)
+    check("the guide has three tool sections", len(sections) == 3,
+          repr([name for name, _ in sections]))
+
+    rendered = re.findall(
+        r'<details class="tool"[^>]*>\s*<summary><h2[^>]*>([^<]+)</h2></summary>',
+        page,
+    )
+    missing = [name for name, _ in sections if name not in rendered]
+    check("every Using section rendered as a details dropdown", not missing,
+          "missing {}, rendered {}".format(missing, rendered))
+    check("no other section became a dropdown",
+          len(re.findall(r'<details class="tool"', page)) == len(sections),
+          "{} dropdowns".format(len(re.findall(r'<details class="tool"', page))))
+    check("every tool dropdown ships closed",
+          not re.search(r'<details class="tool"[^>]*\sopen', page), "")
+
+    for name, prompt in sections:
+        want = sum(1 for _, other in sections if other == prompt)
+        got = served.count(prompt)
+        check("{} paste block is character for character identical".format(name),
+              got == want,
+              "{} served, {} expected, {} chars".format(got, want, len(prompt)))
 
     blocks = len(re.findall(r'<div class="code">', page))
     buttons = len(re.findall(r'<button class="copy"', page))

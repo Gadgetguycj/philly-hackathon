@@ -153,11 +153,54 @@ class CopyableCode(Postprocessor):
         return CODE_BLOCK.sub(wrap, text)
 
 
+H2 = re.compile(r"<h2\b[^>]*>(?P<inner>.*?)</h2>", re.DOTALL)
+H2_ID = re.compile(r'id="([^"]+)"')
+TOOL_HEADING = "Using "
+
+
+class ToolDropdowns(Postprocessor):
+    """Wrap each "Using <tool>" section in a closed details element.
+
+    Runs after the code blocks are back in the text, so a section carries its
+    own copy blocks. The heading keeps its id, so a contents link still lands
+    on it; app.js opens the section that link points into.
+    """
+
+    def run(self, text):
+        heads = list(H2.finditer(text))
+        pieces = []
+        cursor = 0
+        for index, head in enumerate(heads):
+            inner = re.sub(
+                r'<a class="headerlink".*?</a>', "", head.group("inner"), flags=re.DOTALL
+            )
+            label = re.sub(r"<[^>]+>", "", inner).strip()
+            if not label.startswith(TOOL_HEADING):
+                continue
+            end = heads[index + 1].start() if index + 1 < len(heads) else len(text)
+            anchor = H2_ID.search(head.group(0))
+            pieces.append(text[cursor:head.start()])
+            pieces.append(
+                '<details class="tool">\n'
+                '<summary><h2 id="{id}">{label}</h2></summary>\n'
+                '<div class="tool-body">\n{body}\n</div>\n'
+                "</details>\n".format(
+                    id=anchor.group(1) if anchor else "",
+                    label=html.escape(label),
+                    body=text[head.end():end].strip(),
+                )
+            )
+            cursor = end
+        pieces.append(text[cursor:])
+        return "".join(pieces)
+
+
 class GuideExtension(Extension):
     def extendMarkdown(self, md):
         md.treeprocessors.register(Linkify(md), "guide_linkify", 8)
         md.treeprocessors.register(AbsoluteLinks(md), "guide_absolute", 7)
         md.postprocessors.register(CopyableCode(md), "guide_code", 10)
+        md.postprocessors.register(ToolDropdowns(md), "guide_tools", 5)
 
 
 def render(source):
