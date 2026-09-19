@@ -70,7 +70,7 @@ favicon: ./favicon.png
 <pre class="code tight"><span class="l"><span class="nb">TEAM_NAME=yourteam</span></span>
 <span class="l"><span class="nb">RUNPOD_API_KEY=rpa_paste-your-key-here</span></span>
 <span class="l"></span>
-<span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">it</span> <span class="nb">step</span> <span class="nb">by</span> <span class="nb">step.</span> <span class="nb">Stop</span> <span class="nb">and</span> <span class="nb">tell</span> <span class="nb">me</span> <span class="nb">if</span> <span class="nb">it</span> <span class="nb">does</span> <span class="nb">not</span> <span class="nb">load.</span></span></pre>
+<span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">it</span> <span class="nb">step</span> <span class="nb">by</span> <span class="nb">step.</span> <span class="nb">Stop</span> <span class="nb">and</span> <span class="nb">tell</span> <span class="nb">me</span> <span class="nb">if</span> <span class="nb">it</span> <span class="nb">does</span> <span class="nb">not</span> <span class="nb">load.</span></span></pre>
 
 </div>
 
@@ -114,7 +114,7 @@ Skip unless the room is on Cursor.
 <pre class="code tight"><span class="l"><span class="nb">TEAM_NAME=yourteam</span></span>
 <span class="l"><span class="nb">RUNPOD_API_KEY=rpa_paste-your-key-here</span></span>
 <span class="l"></span>
-<span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">it</span> <span class="nb">step</span> <span class="nb">by</span> <span class="nb">step.</span> <span class="nb">Stop</span> <span class="nb">and</span> <span class="nb">tell</span> <span class="nb">me</span> <span class="nb">if</span> <span class="nb">it</span> <span class="nb">does</span> <span class="nb">not</span> <span class="nb">load.</span></span></pre>
+<span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">it</span> <span class="nb">step</span> <span class="nb">by</span> <span class="nb">step.</span> <span class="nb">Stop</span> <span class="nb">and</span> <span class="nb">tell</span> <span class="nb">me</span> <span class="nb">if</span> <span class="nb">it</span> <span class="nb">does</span> <span class="nb">not</span> <span class="nb">load.</span></span></pre>
 
 <p class="cap">Your team name is 3 to 32 characters, lowercase letters, digits and hyphens, starting and ending with a letter or digit.</p>
 
@@ -161,7 +161,7 @@ Skip unless the room is on Codex.
 <pre class="code tight"><span class="l"><span class="nb">TEAM_NAME=yourteam</span></span>
 <span class="l"><span class="nb">RUNPOD_API_KEY=rpa_paste-your-key-here</span></span>
 <span class="l"></span>
-<span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">it</span> <span class="nb">step</span> <span class="nb">by</span> <span class="nb">step.</span> <span class="nb">Stop</span> <span class="nb">and</span> <span class="nb">tell</span> <span class="nb">me</span> <span class="nb">if</span> <span class="nb">it</span> <span class="nb">does</span> <span class="nb">not</span> <span class="nb">load.</span></span></pre>
+<span class="l"><span class="nb">Fetch</span> <span class="nb">https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md</span> <span class="nb">and</span> <span class="nb">follow</span> <span class="nb">it</span> <span class="nb">step</span> <span class="nb">by</span> <span class="nb">step.</span> <span class="nb">Stop</span> <span class="nb">and</span> <span class="nb">tell</span> <span class="nb">me</span> <span class="nb">if</span> <span class="nb">it</span> <span class="nb">does</span> <span class="nb">not</span> <span class="nb">load.</span></span></pre>
 
 <p class="cap">Your team name is 3 to 32 characters, lowercase letters, digits and hyphens, starting and ending with a letter or digit.</p>
 
@@ -188,7 +188,7 @@ Skip unless the room is on Codex.
 <img src="/tts-top.png" class="phone" />
 </div>
 
-<pre class="code tight"><span class="l"><span class="nb">Clone</span> <span class="nb">https://github.com/GalaxyGate/philly-hackathon</span> <span class="nb">here,</span> <span class="nb">push</span> <span class="nb">it</span> <span class="nb">to</span> <span class="nb">a</span> <span class="nb">public</span> <span class="nb">repository</span> <span class="nb">of</span> <span class="nb">mine,</span> <span class="nb">then</span> <span class="nb">follow</span> <span class="nb">the</span> <span class="nb">redeploy</span> <span class="nb">section</span> <span class="nb">of</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">for</span> <span class="nb">my</span> <span class="nb">repository</span> <span class="nb">and</span> <span class="nb">demos/tts.</span></span></pre>
+<pre class="code tight"><span class="l"><span class="nb">Clone</span> <span class="nb">https://github.com/Gadgetguycj/philly-hackathon</span> <span class="nb">here,</span> <span class="nb">push</span> <span class="nb">it</span> <span class="nb">to</span> <span class="nb">a</span> <span class="nb">public</span> <span class="nb">repository</span> <span class="nb">of</span> <span class="nb">mine,</span> <span class="nb">then</span> <span class="nb">follow</span> <span class="nb">the</span> <span class="nb">redeploy</span> <span class="nb">section</span> <span class="nb">of</span> <span class="nb">https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md</span> <span class="nb">for</span> <span class="nb">my</span> <span class="nb">repository</span> <span class="nb">and</span> <span class="nb">demos/tts.</span></span></pre>
 
 </div>
 
@@ -202,7 +202,7 @@ Skip unless the room is on Codex.
 
 <div class="bandwrap"><img src="/bookbuilder-run.png" class="band" /></div>
 
-<pre class="code tight"><span class="l"><span class="nb">Clone</span> <span class="nb">https://github.com/GalaxyGate/philly-hackathon</span> <span class="nb">here,</span> <span class="nb">push</span> <span class="nb">it</span> <span class="nb">to</span> <span class="nb">a</span> <span class="nb">public</span> <span class="nb">repository</span> <span class="nb">of</span> <span class="nb">mine,</span> <span class="nb">then</span> <span class="nb">follow</span> <span class="nb">the</span> <span class="nb">redeploy</span> <span class="nb">section</span> <span class="nb">of</span> <span class="nb">https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md</span> <span class="nb">for</span> <span class="nb">my</span> <span class="nb">repository</span> <span class="nb">and</span> <span class="nb">demos/bookbuilder.</span></span></pre>
+<pre class="code tight"><span class="l"><span class="nb">Clone</span> <span class="nb">https://github.com/Gadgetguycj/philly-hackathon</span> <span class="nb">here,</span> <span class="nb">push</span> <span class="nb">it</span> <span class="nb">to</span> <span class="nb">a</span> <span class="nb">public</span> <span class="nb">repository</span> <span class="nb">of</span> <span class="nb">mine,</span> <span class="nb">then</span> <span class="nb">follow</span> <span class="nb">the</span> <span class="nb">redeploy</span> <span class="nb">section</span> <span class="nb">of</span> <span class="nb">https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md</span> <span class="nb">for</span> <span class="nb">my</span> <span class="nb">repository</span> <span class="nb">and</span> <span class="nb">demos/bookbuilder.</span></span></pre>
 
 </div>
 

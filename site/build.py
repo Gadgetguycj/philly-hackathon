@@ -24,8 +24,8 @@ REPO_DIR = os.path.dirname(SITE_DIR)
 GUIDE = os.path.join(REPO_DIR, "GUIDE.md")
 OUT_DIR = os.path.join(SITE_DIR, "dist")
 
-REPO_URL = "https://github.com/GalaxyGate/philly-hackathon"
-DECK_URL = "https://galaxygate.github.io/philly-hackathon/"
+REPO_URL = "https://github.com/Gadgetguycj/philly-hackathon"
+DECK_URL = "https://gadgetguycj.github.io/philly-hackathon/"
 SITE_URL = "https://runpodtrack.galaxygate.app"
 
 # Text inside these tags is copied into a terminal, so it is never touched.

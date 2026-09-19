@@ -27,7 +27,7 @@ Fill in your team name and key, then paste this.
 TEAM_NAME=yourteam
 RUNPOD_API_KEY=rpa_paste-your-key-here
 
-Fetch https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if it does not load.
+Fetch https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if it does not load.
 ```
 
 ## Using Cursor
@@ -53,7 +53,7 @@ Fill in your team name and key, then paste this.
 TEAM_NAME=yourteam
 RUNPOD_API_KEY=rpa_paste-your-key-here
 
-Fetch https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if it does not load.
+Fetch https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if it does not load.
 ```
 
 ## Using Codex
@@ -82,7 +82,7 @@ Fill in your team name and key, then paste this.
 TEAM_NAME=yourteam
 RUNPOD_API_KEY=rpa_paste-your-key-here
 
-Fetch https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if it does not load.
+Fetch https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md and follow it step by step. Stop and tell me if it does not load.
 ```
 
 ## The demos
@@ -92,13 +92,13 @@ Both run on GalaxyGate servers with GPU work on RunPod, and setup puts Text to S
 **Text to Speech**, https://runpoddemo1.galaxygate.app. Paste up to 2000 words, pick a voice from 20, hear it aloud.
 
 ```text
-Clone https://github.com/GalaxyGate/philly-hackathon here, push it to a public repository of mine, then follow the redeploy section of https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md for my repository and demos/tts.
+Clone https://github.com/Gadgetguycj/philly-hackathon here, push it to a public repository of mine, then follow the redeploy section of https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md for my repository and demos/tts.
 ```
 
 **Bookbuilder**, https://runpoddemo2.galaxygate.app. Name a subject and watch a fast mixture of experts model write a 100 page book.
 
 ```text
-Clone https://github.com/GalaxyGate/philly-hackathon here, push it to a public repository of mine, then follow the redeploy section of https://raw.githubusercontent.com/GalaxyGate/philly-hackathon/main/AGENT.md for my repository and demos/bookbuilder.
+Clone https://github.com/Gadgetguycj/philly-hackathon here, push it to a public repository of mine, then follow the redeploy section of https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md for my repository and demos/bookbuilder.
 ```
 
 ## Build
