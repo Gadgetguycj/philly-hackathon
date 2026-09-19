@@ -1,5 +1,7 @@
 """Every setting the app reads. Nothing outside this module touches os.environ."""
 
+import json
+import logging
 import os
 from pathlib import Path
 
@@ -9,6 +11,7 @@ DEFAULT_PAGES = 100
 PAGE_CHOICES = (10, 25, 50, 100)
 # A sanity bound on one request, not a quota. There is no hourly or per IP limit anywhere.
 MAX_PAGES = 1000
+logger = logging.getLogger(__name__)
 
 
 def api_key() -> str:
@@ -21,6 +24,38 @@ def base_url() -> str:
 
 def model() -> str:
     return (os.getenv("LLM_MODEL") or DEFAULT_MODEL).strip()
+
+
+def llm_extra() -> dict:
+    """Extra top level fields for the chat completions body, as a JSON object.
+
+    Reasoning models are switched off by a field this app does not name: Kimi on RunPod
+    takes {"thinking": {"type": "disabled"}}, gpt-oss on vLLM takes
+    {"reasoning_effort": "low"}. The default is empty, so the app stays vendor neutral.
+    """
+    raw = (os.getenv("LLM_EXTRA") or "").strip()
+    if not raw:
+        return {}
+    try:
+        value = json.loads(raw)
+    except json.JSONDecodeError as error:
+        _warn_once(raw, f"LLM_EXTRA is not valid JSON ({error.msg} at position {error.pos}), so it is ignored.")
+        return {}
+    if not isinstance(value, dict):
+        _warn_once(raw, "LLM_EXTRA is not a JSON object, so it is ignored.")
+        return {}
+    return value
+
+
+_warned: set[str] = set()
+
+
+def _warn_once(raw: str, message: str) -> None:
+    """Complain about a bad LLM_EXTRA once per value, not once per request."""
+    if raw in _warned:
+        return
+    _warned.add(raw)
+    logger.warning("%s", message)
 
 
 def default_pages() -> int:

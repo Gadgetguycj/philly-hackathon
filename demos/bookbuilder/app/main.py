@@ -34,13 +34,16 @@ async def lifespan(app: FastAPI):
     except (OSError, PermissionError) as error:
         logger.error("%s", error if str(error) else store.data_dir_error())
         raise SystemExit(1) from None
+    # Reading LLM_EXTRA here is what makes a bad value complain at startup instead of
+    # halfway through someone's book.
     logger.info(
-        "bookbuilder ready model=%s base_url=%s key_set=%s pages=%s data_dir=%s",
+        "bookbuilder ready model=%s base_url=%s key_set=%s pages=%s data_dir=%s llm_extra=%s",
         config.model(),
         config.base_url(),
         bool(config.api_key()),
         config.default_pages(),
         config.data_dir(),
+        sorted(config.llm_extra()),
     )
     yield
 

@@ -25,6 +25,43 @@ The default endpoint is RunPod's public Kimi endpoint, which is OpenAI compatibl
 endpoint, and nothing else has to change. The app sends a plain `/chat/completions` request
 with `stream: true` and reads the chunks as they come back.
 
+## Reasoning models
+
+A reasoning model answers in two parts. The answer arrives as `content` and the thinking
+arrives beside it, as `reasoning_content` on RunPod's Kimi and as `reasoning` on vLLM. This
+app reads `content` only, so no thinking ever reaches a page or the browser.
+
+Thinking still costs tokens, and a model that thinks past its budget sends back nothing at
+all. Kimi with a 200 token budget spent 199 of them thinking and returned an empty reply,
+which is what an empty outline looks like. Two things deal with that. The budgets are large
+enough to think and then write, 4000 tokens for the outline and 1600 for a page. And
+`LLM_EXTRA` carries the field that turns the thinking off, because every endpoint spells it
+differently.
+
+```sh
+LLM_EXTRA='{"thinking":{"type":"disabled"}}'   # RunPod's Kimi
+LLM_EXTRA='{"reasoning_effort":"low"}'         # gpt-oss on vLLM
+```
+
+RunPod's public Kimi endpoint needs one more field in that object. It answers with HTTP 200
+and a zero byte body for any `temperature` except 0.6, which the app hits because it sends
+0.4 for the outline and 0.8 for a page. Measured on 2026-09-19: absent or 0.6 answered 9
+times out of 9, and 0.4, 0.8 and 1.0 came back empty 8 times out of 8. So the value that
+builds a book on that endpoint is
+
+```sh
+LLM_EXTRA='{"thinking":{"type":"disabled"},"temperature":0.6}'
+```
+
+Whatever is in `LLM_EXTRA` is merged into the request body at the top level, after the
+fields the app sets, so it can also replace one of them. It is empty by default, so the app
+is not tied to one vendor. A value that is not a JSON object is ignored, with a warning in
+the log at startup.
+
+When the endpoint reports `completion_tokens_details.reasoning_tokens`, the `done` event
+carries the total for the run as `reasoning_tokens`. That is how you see a model thinking
+instead of writing. The field is absent when the endpoint does not report it.
+
 ## How it works
 
 **Plan first.** One request asks for a JSON object with a title and a list of chapters, each
@@ -80,7 +117,7 @@ Server sent events, one JSON object per event.
 | `page_dropped` | A page that had started will not be finished, so the browser removes it. |
 | `heartbeat` | Ten seconds passed with nothing else to send. |
 | `failed` | The run stopped on an error. The message is the upstream error with the key removed. |
-| `done` | The run ended, whether it finished, was stopped or failed. Carries the book address. |
+| `done` | The run ended, whether it finished, was stopped or failed. Carries the book address, and `reasoning_tokens` when the endpoint reported any. |
 
 Every event carries an id, so a browser that loses the connection resumes from where it was
 instead of replaying the book. A cold endpoint can take minutes to answer, so the heartbeat
@@ -93,6 +130,7 @@ keeps the connection from going quiet for more than ten seconds and getting cut 
 | `RUNPOD_API_KEY` | none | The bearer token. Required. |
 | `LLM_BASE_URL` | `https://api.runpod.ai/v2/moonshot-kimi/openai/v1` | Any OpenAI compatible base URL. |
 | `LLM_MODEL` | `kimi-k2.6` | The model name sent in the request. |
+| `LLM_EXTRA` | empty | A JSON object merged into every request body at the top level. |
 | `BOOK_PAGES` | `100` | The page count the selector starts on. |
 | `DATA_DIR` | `/data` | Books are written to `DATA_DIR/books/<id>/`. |
 

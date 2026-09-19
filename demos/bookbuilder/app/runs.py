@@ -17,7 +17,9 @@ from . import config, llm, outline as outline_mod, pages as pages_mod, store
 from .outline import Chapter, Outline
 
 MAX_IN_FLIGHT = 3
-OUTLINE_MAX_TOKENS = 2000
+# The outline is a small JSON object, but a reasoning model thinks first and only then
+# writes it. With too small a budget the whole reply is thinking and the content is empty.
+OUTLINE_MAX_TOKENS = 4000
 RAW_REPLY_CHARS = 1500
 KEEP_FINISHED_RUNS = 20
 logger = logging.getLogger(__name__)
@@ -95,6 +97,8 @@ class Run:
         self.finished = False
         self.words = 0
         self.pages_done = 0
+        # None until an endpoint reports reasoning tokens. Never guessed.
+        self.reasoning_tokens: int | None = None
         self.kept: list[str] = []
         self.created_at = datetime.now(timezone.utc).isoformat(timespec="seconds")
         self.started = time.monotonic()
@@ -122,6 +126,13 @@ class Run:
         self.finished = True
         for waiter in self.waiters:
             waiter.set()
+
+    def note_usage(self, usage: object) -> None:
+        """Add up the reasoning tokens the endpoint reports, if it reports any."""
+        tokens = llm.reasoning_tokens(usage)
+        if tokens is None:
+            return
+        self.reasoning_tokens = (self.reasoning_tokens or 0) + tokens
 
     def add_stream(self, index: int, stream: PageStream) -> None:
         self.streams[index] = stream
@@ -284,6 +295,7 @@ def _complete(run: Run) -> None:
         seconds=round(run.elapsed(), 1),
         words_per_second=run.words_per_second(),
         stopped=run.stopped,
+        **({"reasoning_tokens": run.reasoning_tokens} if run.reasoning_tokens is not None else {}),
     )
     run.finish()
 
@@ -292,7 +304,9 @@ async def make_outline(run: Run, client: httpx.AsyncClient) -> Outline:
     raw = ""
     for firmer in (False, True):
         messages = outline_mod.messages(run.idea, run.requested_title, run.pages_requested, firmer)
-        raw = await llm.complete(client, messages, max_tokens=OUTLINE_MAX_TOKENS)
+        raw = await llm.complete(
+            client, messages, max_tokens=OUTLINE_MAX_TOKENS, on_usage=run.note_usage
+        )
         try:
             return outline_mod.parse(raw, run.pages_requested, run.requested_title)
         except outline_mod.OutlineError as error:
@@ -419,6 +433,8 @@ async def _write_page(
                     elif kind == "finish" and value == "length":
                         # The page filled its token budget. Keep what arrived.
                         stream.truncated = True
+                    elif kind == "usage":
+                        run.note_usage(value)
         except asyncio.CancelledError:
             stream.close(error="The run was stopped before this page finished.")
             raise

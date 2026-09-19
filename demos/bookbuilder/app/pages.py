@@ -4,7 +4,10 @@ from .outline import Chapter, Outline
 
 WORDS_LOW = 280
 WORDS_HIGH = 320
-MAX_TOKENS = 900
+# A page is about 400 tokens of prose. The budget is far above that because a reasoning
+# model spends tokens thinking before it writes, and a page that runs out of budget
+# mid sentence is worse than one that finishes early.
+MAX_TOKENS = 1600
 # The rolling context is the tail of the last page plus a shorter tail of the page before
 # it. The 256K context of the default endpoint could hold the whole book, but a small
 # prompt is a fast prompt, and speed is the point of this demo.

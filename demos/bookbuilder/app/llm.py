@@ -3,7 +3,7 @@
 import json
 import re
 from contextlib import aclosing
-from typing import AsyncIterator
+from typing import AsyncIterator, Callable
 
 import httpx
 
@@ -66,19 +66,37 @@ def build_client() -> httpx.AsyncClient:
 def _payload(messages: list[dict], max_tokens: int, temperature: float) -> dict:
     # stream_options is deliberately not sent. Usage is not needed for the counters, and
     # some OpenAI compatible servers reject the field. A usage only chunk is still handled.
-    return {
+    body = {
         "model": config.model(),
         "messages": messages,
         "stream": True,
         "max_tokens": max_tokens,
         "temperature": temperature,
     }
+    # LLM_EXTRA carries whatever the endpoint in front of us needs, such as the switch that
+    # turns a reasoning model's thinking off. It is merged last, so it can also replace a
+    # field above.
+    body.update(config.llm_extra())
+    return body
+
+
+def reasoning_tokens(usage: object) -> int | None:
+    """The reasoning token count from one usage object, or None if it does not carry one."""
+    if not isinstance(usage, dict):
+        return None
+    details = usage.get("completion_tokens_details")
+    if not isinstance(details, dict):
+        return None
+    value = details.get("reasoning_tokens")
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        return None
+    return value
 
 
 async def stream_chat(
     client: httpx.AsyncClient,
     messages: list[dict],
-    max_tokens: int = 900,
+    max_tokens: int = 1600,
     temperature: float = 0.8,
 ) -> AsyncIterator[tuple[str, object]]:
     """Yield ("delta", text), ("finish", reason) and ("usage", dict) as they arrive."""
@@ -125,6 +143,9 @@ def _parse_line(line: str) -> list[tuple[str, object]]:
                 continue
             delta = choice.get("delta")
             if isinstance(delta, dict):
+                # Only content is read. A reasoning model also sends its thinking, as
+                # reasoning_content on Kimi and as reasoning on vLLM. Thinking is never
+                # part of a page, so no other field of the delta is touched.
                 text = delta.get("content")
                 if isinstance(text, str) and text:
                     out.append(("delta", text))
@@ -136,8 +157,13 @@ def _parse_line(line: str) -> list[tuple[str, object]]:
     return out
 
 
-async def complete(client: httpx.AsyncClient, messages: list[dict], max_tokens: int = 1600) -> str:
-    """Collect a whole streamed reply into one string."""
+async def complete(
+    client: httpx.AsyncClient,
+    messages: list[dict],
+    max_tokens: int = 1600,
+    on_usage: Callable[[object], None] | None = None,
+) -> str:
+    """Collect a whole streamed reply into one string. Reasoning content is not part of it."""
     parts: list[str] = []
     async with aclosing(
         stream_chat(client, messages, max_tokens=max_tokens, temperature=0.4)
@@ -145,4 +171,6 @@ async def complete(client: httpx.AsyncClient, messages: list[dict], max_tokens: 
         async for kind, value in tokens:
             if kind == "delta":
                 parts.append(str(value))
+            elif kind == "usage" and on_usage is not None:
+                on_usage(value)
     return "".join(parts)
