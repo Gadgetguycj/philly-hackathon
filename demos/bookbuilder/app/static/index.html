@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Bookbuilder</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<header class="bar" id="bar">
+  <a class="home" href="/">Bookbuilder</a>
+  <span class="crumb" id="bookTitle"></span>
+  <div class="stats" id="stats" hidden>
+    <span id="statPages">0 of 0 pages</span>
+    <span id="statTime">0.0 s</span>
+    <span id="statRate">0 words per second</span>
+  </div>
+  <button type="button" class="stop" id="stop" hidden>Stop</button>
+  <a class="ghost" href="/books">Books</a>
+</header>
+
+<main class="sheet">
+  <section class="setup" id="setup">
+    <h1>Write a book in a few minutes</h1>
+    <p class="idea">Type an idea. The model plans the chapters, then writes every page. The pages appear here as they are written.</p>
+    <form id="form">
+      <label for="idea">The idea</label>
+      <textarea id="idea" name="idea" rows="3" required
+        placeholder="A night shift nurse in Philadelphia finds a door in the hospital basement that opens onto the same night, over and over."></textarea>
+      <div class="row">
+        <div class="field">
+          <label for="title">Title, if you have one</label>
+          <input id="title" name="title" type="text" placeholder="The model will propose one">
+        </div>
+        <div class="field narrow">
+          <label for="pages">Pages</label>
+          <select id="pages" name="pages"></select>
+        </div>
+      </div>
+      <button type="submit" class="go" id="build">Build the book</button>
+    </form>
+    <p class="facts" id="modelLine"></p>
+    <p class="notice" id="keyWarning" hidden>RUNPOD_API_KEY is not set, so a build will fail with an error from the endpoint.</p>
+  </section>
+
+  <p class="status" id="status" hidden></p>
+  <div class="error" id="error" hidden></div>
+  <details class="outline" id="outlineBox" hidden>
+    <summary id="outlineSummary">Outline</summary>
+    <ol id="outlineList"></ol>
+  </details>
+  <section class="reader" id="reader"></section>
+  <section class="finish" id="finish" hidden></section>
+</main>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
