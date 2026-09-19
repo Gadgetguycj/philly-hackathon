@@ -163,7 +163,7 @@ html, body, #app { background: var(--bg); }
   z-index: 10;
   font-family: var(--sans);
   font-size: 18px;
-  color: #8d95b0;
+  color: #9aa2bb;
   font-variant-numeric: tabular-nums;
 }
 .slidev-page[data-slidev-no="1"] .deck-num { display: none; }
@@ -184,15 +184,31 @@ html, body, #app { background: var(--bg); }
   padding: 20px;
   border-radius: 6px;
 }
-.qr-tile img { width: 290px; height: 290px; display: block; }
+.qr-tile img { width: 290px; height: 290px; display: block; image-rendering: pixelated; }
 
 /* ---------- demo slide: text beside a phone screenshot ---------- */
-.withshot { display: flex; gap: 28px; align-items: flex-start; }
-.withshot .col { flex: 1 1 auto; min-width: 0; }
+.withshot { display: flex; gap: 28px; align-items: center; }
+.withshot .col {
+  flex: 1 1 auto;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+}
 .withshot .phone {
   flex: 0 0 auto;
-  height: 372px;
+  height: 268px;
   width: auto;
+  display: block;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+}
+
+/* ---------- demo slide: a wide screenshot band ---------- */
+.bandwrap { flex: 0 1 auto; min-height: 0; display: flex; }
+.band {
+  width: 100%;
+  height: auto;
   display: block;
   border: 1px solid var(--line);
   border-radius: 4px;
