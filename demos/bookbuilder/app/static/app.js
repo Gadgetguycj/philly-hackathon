@@ -20,8 +20,8 @@ const nextButton = el("next");
 const toLive = el("toLive");
 const whereLabel = el("whereLabel");
 
-// Every step the page text shrinks by when a page holds more words than the paper.
-const FITS = [1, 0.94, 0.88, 0.82, 0.78, 0.74, 0.7, 0.66];
+// The smallest the page type may get before the paper is simply too small for the words.
+const FIT_FLOOR = 0.42;
 
 const state = {
   title: "",
@@ -42,6 +42,7 @@ window.bookbuilder = state;
 let source = null;
 let runId = null;
 let startedAt = 0;
+let penAt = 0; // when the first token of the book arrived. 0 while the model is waking
 let ticker = null;
 let doneWords = 0;
 let liveWords = 0;
@@ -53,10 +54,24 @@ let frame = 0;
 
 // ---------------------------------------------------------------- the header
 
+// A cold endpoint can take minutes to answer. Until the first token there is nothing
+// being written, and these two messages would read as if there were. Anything else the
+// run has to say, a retry or a stop, is shown as it was sent.
+const ROUTINE = /^(Planning the chapters|Writing page \d+)$/;
+let statusText = "";
+let statusStill = false;
+
 function setStatus(text, still) {
+  statusText = text || "";
+  statusStill = Boolean(still);
+  renderStatus();
+}
+
+function renderStatus() {
+  const text = !penAt && ROUTINE.test(statusText) ? "Waking the model" : statusText;
   statusLine.hidden = !text;
-  statusLine.textContent = text || "";
-  statusLine.classList.toggle("still", Boolean(still));
+  statusLine.textContent = text;
+  statusLine.classList.toggle("still", statusStill);
 }
 
 function showError(message, raw) {
@@ -82,10 +97,13 @@ function countWords(text) {
 }
 
 function paintStats() {
-  const seconds = (performance.now() - startedAt) / 1000;
-  el("statTime").textContent = seconds.toFixed(1) + " s";
+  const now = performance.now();
+  el("statTime").textContent = ((now - startedAt) / 1000).toFixed(1) + " s";
   const words = doneWords + liveWords;
-  const rate = seconds > 0.2 ? words / seconds : 0;
+  // Words per second is the writing speed, so its clock starts at the first token. A two
+  // minute wake belongs in the elapsed time, not in the rate.
+  const writing = penAt ? (now - penAt) / 1000 : 0;
+  const rate = writing > 0.2 ? words / writing : 0;
   el("statRate").textContent = rate.toFixed(0);
 }
 
@@ -182,23 +200,45 @@ function paint(container, index) {
   container.classList.toggle("empty", !paper);
   if (paper) {
     container.appendChild(paper);
-    fitPaper(paper);
+    refit();
   }
 }
 
-// Shrink the type a step at a time until the page holds its own text. The step is set on
-// the whole book, because two facing pages printed at different sizes do not read as one
-// book. It only ever goes down, so the type never jumps about while a page is written.
-let fitStep = 0;
+// A printed page never clips, so the type is sized to the longest page the book has.
+// The size is set on the whole book, because two facing pages printed at different sizes
+// do not read as one book, and it only ever goes down within a run.
+let fit = 1;
 
-function fitPaper(paper) {
+function setFit(value) {
+  fit = Math.max(FIT_FLOOR, Math.min(1, value));
+  book.style.setProperty("--fit", String(fit));
+}
+
+// How much taller than its paper a page's text is. 1 or less means it fits.
+function spill(paper) {
   const text = paper.querySelector(".text");
-  if (!text) return;
-  while (fitStep < FITS.length - 1 && text.scrollHeight > text.clientHeight + 1) {
-    fitStep += 1;
-    book.style.setProperty("--fit", String(FITS[fitStep]));
+  if (!text || !text.clientHeight) return 1;
+  return text.scrollHeight / text.clientHeight;
+}
+
+function papersOnShow() {
+  return [leafLeft, leafRight]
+    .map((leaf) => leaf.querySelector(".paper"))
+    .filter((paper) => paper && paper.offsetParent !== null);
+}
+
+// Halving the type quarters the height it needs, because the lines get shorter and more
+// words fit on each one, so one square root lands within a percent and the loop is a
+// safety net rather than a search.
+function refit() {
+  for (let pass = 0; pass < 6; pass += 1) {
+    const worst = papersOnShow().reduce((most, paper) => Math.max(most, spill(paper)), 1);
+    if (worst <= 1.002) break;
+    const next = fit * Math.sqrt(1 / worst) * 0.995;
+    if (next >= fit - 0.0005) break;
+    setFit(next);
   }
-  paper.classList.toggle("more", text.scrollHeight > text.clientHeight + 1);
+  papersOnShow().forEach((paper) => paper.classList.toggle("more", spill(paper) > 1.002));
 }
 
 // ------------------------------------------------------- writing on the page
@@ -263,7 +303,11 @@ function flush() {
   pending = "";
   if (!chunk || !writer.node) return;
   ink(chunk);
-  fitPaper(writer.paper);
+  // The page being written is measured too, so the type settles into the size the book
+  // needs instead of the page hiding its first lines behind a scroll. Once the type is as
+  // small as it may get, the page scrolls to keep the pen in view, and it is measured
+  // again the moment it is finished.
+  refit();
   scrollToPen();
 }
 
@@ -413,10 +457,10 @@ async function build(event) {
   state.finished = false;
   doneWords = 0;
   liveWords = 0;
-  fitStep = 0;
-  book.style.setProperty("--fit", "1");
+  penAt = 0;
+  setFit(1);
   unmount();
-  setStatus("Asking the model for an outline");
+  setStatus("Waking the model");
 
   let payload;
   try {
@@ -517,6 +561,10 @@ function listen() {
     const data = JSON.parse(event.data);
     const page = state.pages.get(data.index);
     if (!page) return;
+    if (!penAt) {
+      penAt = performance.now();
+      renderStatus();
+    }
     page.text += data.text;
     page.words += countWords(data.text);
     if (data.index === state.live) liveWords = page.words;
@@ -535,8 +583,10 @@ function listen() {
     if (data.index === writer.mounted) {
       flush();
       unmount();
-      if (page) paint(leafRight, data.index);
     }
+    // A finished page is drawn again from its first line and measured, so the type comes
+    // down to the size that holds the longest page in the book and nothing stays hidden.
+    if (page && state.view === data.index) paint(leafRight, data.index);
     doneWords = data.total_words;
     liveWords = 0;
     el("statPages").textContent = data.index + " of " + data.total;
@@ -592,9 +642,8 @@ function listen() {
     finishBox.hidden = false;
     finishBox.textContent = "";
     const heading = document.createElement("h2");
-    heading.textContent = data.stopped
-      ? "Stopped after " + data.pages + " pages"
-      : "Done. " + data.pages + " pages.";
+    const pages = data.pages + (data.pages === 1 ? " page" : " pages");
+    heading.textContent = data.stopped ? "Stopped after " + pages : "Done. " + pages + ".";
     finishBox.appendChild(heading);
     const facts = document.createElement("p");
     facts.className = "facts";
@@ -676,6 +725,19 @@ document.addEventListener("keydown", (event) => {
     event.preventDefault();
     step(1);
   }
+});
+
+// A window that changes size changes the paper, so the pages are measured again.
+let resizeTimer = 0;
+window.addEventListener("resize", () => {
+  if (desk.hidden) return;
+  window.clearTimeout(resizeTimer);
+  resizeTimer = window.setTimeout(() => {
+    setFit(1);
+    paint(leafLeft, state.view - 1);
+    paint(leafRight, state.view);
+    afterView();
+  }, 150);
 });
 
 let touchX = 0;

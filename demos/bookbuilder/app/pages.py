@@ -2,8 +2,8 @@
 
 from .outline import Chapter, Outline
 
-WORDS_LOW = 280
-WORDS_HIGH = 320
+WORDS_LOW = 220
+WORDS_HIGH = 260
 # A page is about 400 tokens of prose. The budget is far above that because a reasoning
 # model spends tokens thinking before it writes, and a page that runs out of budget
 # mid sentence is worse than one that finishes early.

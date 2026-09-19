@@ -54,7 +54,8 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/", response_class=FileResponse)
 async def home() -> FileResponse:
-    return FileResponse(STATIC_DIR / "index.html", media_type="text/html")
+    # No caching on the shell, so a redeploy is picked up on the next visit.
+    return FileResponse(STATIC_DIR / "index.html", media_type="text/html", headers={"Cache-Control": "no-cache"})
 
 
 @app.get("/health")
