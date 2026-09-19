@@ -95,7 +95,7 @@ Both run on GalaxyGate servers with GPU work on RunPod, and setup puts Text to S
 Clone https://github.com/Gadgetguycj/philly-hackathon here, push it to a public repository of mine, then follow the redeploy section of https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md for my repository and demos/tts.
 ```
 
-**Bookbuilder**, https://runpoddemo2.galaxygate.app. Name a subject and watch a fast mixture of experts model write a 100 page book. Code: https://github.com/Gadgetguycj/philly-hackathon/tree/main/demos/bookbuilder
+**Bookbuilder**, https://runpoddemo2.galaxygate.app. Name a subject and watch a fast mixture of experts model write a 30 page book. Code: https://github.com/Gadgetguycj/philly-hackathon/tree/main/demos/bookbuilder
 
 ```text
 Clone https://github.com/Gadgetguycj/philly-hackathon here, push it to a public repository of mine, then follow the redeploy section of https://raw.githubusercontent.com/Gadgetguycj/philly-hackathon/main/AGENT.md for my repository and demos/bookbuilder.

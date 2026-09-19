@@ -131,7 +131,7 @@ keeps the connection from going quiet for more than ten seconds and getting cut 
 | `LLM_BASE_URL` | `https://api.runpod.ai/v2/moonshot-kimi/openai/v1` | Any OpenAI compatible base URL. |
 | `LLM_MODEL` | `kimi-k2.6` | The model name sent in the request. |
 | `LLM_EXTRA` | empty | A JSON object merged into every request body at the top level. |
-| `BOOK_PAGES` | `100` | The page count the selector starts on. |
+| `BOOK_PAGES` | `30` | The page count the selector starts on. |
 | `DATA_DIR` | `/data` | Books are written to `DATA_DIR/books/<id>/`. |
 
 Nothing else is read from the environment.

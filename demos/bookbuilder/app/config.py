@@ -7,10 +7,10 @@ from pathlib import Path
 
 DEFAULT_BASE_URL = "https://api.runpod.ai/v2/moonshot-kimi/openai/v1"
 DEFAULT_MODEL = "kimi-k2.6"
-DEFAULT_PAGES = 100
-PAGE_CHOICES = (10, 25, 50, 100)
+DEFAULT_PAGES = 30
+PAGE_CHOICES = (10, 20, 30)
 # A sanity bound on one request, not a quota. There is no hourly or per IP limit anywhere.
-MAX_PAGES = 1000
+MAX_PAGES = 30
 logger = logging.getLogger(__name__)
 
 
