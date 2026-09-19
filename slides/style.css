@@ -112,6 +112,13 @@ html, body, #app { background: var(--bg); }
   white-space: nowrap;
 }
 
+/* a mono URL in prose: breaks only at the slashes marked with <wbr> */
+.slidev-layout code.link {
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+
 /* hand-written code blocks: only spaces break, so no identifier splits at a hyphen */
 .slidev-layout pre.code {
   font-family: var(--mono);
@@ -136,8 +143,10 @@ html, body, #app { background: var(--bg); }
   text-indent: -2.4ch;
 }
 .nb { white-space: nowrap; }
-/* one paste block holds a URL too long for 21px; it gets its own size */
-.slidev-layout pre.code.tight { font-size: 18px; }
+/* the paste and clone blocks hold a URL too long for 21px; they get their own size.
+   No letter-spacing and a shorter hanging indent, so the 77 character raw URL fits. */
+.slidev-layout pre.code.tight { font-size: 18px; letter-spacing: 0; padding: 13px 11px; }
+.slidev-layout pre.code.tight .l { padding-left: 1ch; text-indent: -1ch; }
 
 /* ---------- screenshots ---------- */
 .shotwrap {

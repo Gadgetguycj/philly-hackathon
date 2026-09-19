@@ -182,7 +182,7 @@ Skip unless the room is on Codex.
 
 <p class="cap">Both run on GalaxyGate servers with GPU work on RunPod, and setup puts Text to Speech on yours.</p>
 
-<p class="cap"><strong>Text to Speech</strong>, https://runpoddemo1.galaxygate.app. Paste up to 2000 words, pick a voice from 20, hear it aloud.</p>
+<p class="cap"><strong>Text to Speech</strong>, https://runpoddemo1.galaxygate.app. Paste up to 2000 words, pick a voice from 20, hear it aloud. Code: <code class="link">https://github.com/<wbr>Gadgetguycj/<wbr>philly-hackathon/<wbr>tree/<wbr>main/<wbr>demos/<wbr>tts</code></p>
 
 </div>
 <img src="/tts-top.png" class="phone" />
@@ -198,7 +198,7 @@ Skip unless the room is on Codex.
 
 <div class="body sm">
 
-<p class="cap"><strong>Bookbuilder</strong>, https://runpoddemo2.galaxygate.app. Name a subject and watch a fast mixture of experts model write a 100 page book.</p>
+<p class="cap"><strong>Bookbuilder</strong>, https://runpoddemo2.galaxygate.app. Name a subject and watch a fast mixture of experts model write a 30 page book. Code: <code class="link">https://github.com/<wbr>Gadgetguycj/<wbr>philly-hackathon/<wbr>tree/<wbr>main/<wbr>demos/<wbr>bookbuilder</code></p>
 
 <div class="bandwrap"><img src="/bookbuilder-run.png" class="band" /></div>
 

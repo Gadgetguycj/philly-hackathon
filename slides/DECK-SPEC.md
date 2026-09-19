@@ -1,6 +1,6 @@
 # Deck spec: the GalaxyGate + RunPod track
 
-Source of truth: `/opt/claude/projects/philly-hackathon/GUIDE.md` at commit **da666f6**.
+Source of truth: `/opt/claude/projects/philly-hackathon/GUIDE.md` at commit **47b4535**.
 
 Rules. A slide exists only if a participant needs it to finish. Prose is compressed to the
 instruction. Every fenced block in the guide appears on a slide character for character and is
@@ -18,6 +18,16 @@ Nothing on a slide face is below 36 px in that render, measured in a browser acr
 sixteen slides. Code blocks are 21 px CSS, except `.tight` at 18 px, used where a line would
 otherwise wrap or overflow the block: the paste block on every tool slide, both clone prompts,
 and the Claude Code and Codex command blocks.
+
+A `.tight` block also drops letter spacing, takes a 1ch hanging indent and 11 px of side
+padding. Those three together buy 14 CSS px, which is what the 77 character raw AGENT.md URL
+needs to sit inside the block. Every code block on every slide now clears its own right edge
+by at least 6 CSS px, measured in a browser rather than estimated.
+
+A code link in prose is an inline `<code class="link">` chip in the bundled mono at 19 px CSS,
+which is 38 px in the render. The chip carries a `<wbr>` after each slash, so a link too long
+for its line breaks at a slash and nowhere else. The text content is unchanged by those
+markers.
 
 Contrast. Every text colour clears 7 to 1 on its own background. Body `#e6e9f2` on `#0b1020`
 is 15.6 to 1, code `#ddd6c8` on `#121a33` is 11.9 to 1, and the slide number `#9aa2bb` is
@@ -40,9 +50,10 @@ Assets in `public/`.
   app at phone width after a run.
 - `bookbuilder-run.png`, the top band of
   `philly-hackathon/demos/bookbuilder/docs/browser-2-midrun.png`, Bookbuilder mid run at 1280
-  wide. That capture came from a run against the stand-in endpoint the demo is tested with, so
-  the crop stops above the page text that says so, and keeps the header, the page counter and
-  the words per second.
+  wide. That capture came from a run against the stand-in endpoint the demo is tested with, and
+  every page in it carries a line saying so, so the crop stops at row 163, above the first line
+  of page text. It keeps the header, the page counter, the elapsed time, the words per second,
+  the writing status and the top of the open book.
 - `favicon.png`.
 
 ## Running order, 16 slides
@@ -60,8 +71,8 @@ talk.
 | 6 | S | Using Cursor: sign in, then paste. Restart and sign in, the paste block, the team name rule. |
 | 7 | S | Using Codex. Terminal only, the four `codex mcp` commands, and the `config.toml` network block. |
 | 8 | S | Using Codex: paste this. The paste block and the team name rule. |
-| 9 | P | The demos: Text to Speech. What both demos are, the URL, what this one does, the phone screenshot, and its clone prompt. |
-| 10 | P | The demos: Bookbuilder. The URL, what it does, the mid run screenshot, and its clone prompt. |
+| 9 | P | The demos: Text to Speech. What both demos are, the URL, what this one does, its code link, the phone screenshot, and its clone prompt. |
+| 10 | P | The demos: Bookbuilder. The URL, what it does, its code link, the mid run screenshot, and its clone prompt. |
 | 11 | P | Build. Where the app and the key live, redeploying, and the optional endpoint prompt. |
 | 12 | R | Submit, and what is required. Where to submit, what judges get, and the two entry requirements that earn no points. |
 | 13 | R | Scoring, out of 100. Judges score live. It works 20, Simple to use 20, Reliable 15, Secure 10, Scalable 10. |
@@ -80,8 +91,9 @@ count past fifteen.
 
 - `python3 check-verbatim.py` extracts every `<pre class="code">` block from `slidev/slides.md`,
   turns it back into plain text, and requires each one to equal a fenced block in `GUIDE.md`.
-  It also fails on a curly apostrophe, a curly quote, an en or em dash, or a non-breaking space
-  inside a code block, and on an em dash or non-breaking space anywhere in `slides.md`.
+  It does the same for the two demo caption lines and for every mono code link. It also fails
+  on a curly apostrophe, a curly quote, an en or em dash, or a non-breaking space inside a code
+  block, and on an em dash or non-breaking space anywhere in `slides.md`.
 - `npx slidev export slides.md --format png --scale 2 --output render` writes one 1960 by 1104
   PNG per slide.
 - `npx slidev export slides.md --output deck.pdf` writes the PDF. `pdffonts deck.pdf` must show
