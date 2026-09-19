@@ -4,16 +4,16 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Bookbuilder</title>
-<link rel="stylesheet" href="/static/style.css">
+<link rel="stylesheet" href="/static/style.css?v=2">
 </head>
 <body>
 <header class="bar" id="bar">
   <a class="home" href="/">Bookbuilder</a>
   <span class="crumb" id="bookTitle"></span>
   <div class="stats" id="stats" hidden>
-    <span id="statPages">0 of 0 pages</span>
-    <span id="statTime">0.0 s</span>
-    <span id="statRate">0 words per second</span>
+    <span class="stat"><b id="statPages">0 of 0</b><i>pages</i></span>
+    <span class="stat"><b id="statTime">0.0 s</b><i>elapsed</i></span>
+    <span class="stat rate"><b id="statRate">0</b><i>words per second</i></span>
   </div>
   <button type="button" class="stop" id="stop" hidden>Stop</button>
   <a class="ghost" href="/books">Books</a>
@@ -45,14 +45,32 @@
 
   <p class="status" id="status" hidden></p>
   <div class="error" id="error" hidden></div>
-  <details class="outline" id="outlineBox" hidden>
-    <summary id="outlineSummary">Outline</summary>
-    <ol id="outlineList"></ol>
-  </details>
-  <section class="reader" id="reader"></section>
+
+  <section class="desk" id="desk" hidden>
+    <button type="button" class="arrow prev" id="prev" aria-label="The page before">&#8249;</button>
+    <div class="book" id="book">
+      <div class="leaf side-left" id="leafLeft"></div>
+      <div class="leaf side-right" id="leafRight"></div>
+      <div class="turner" id="turner" hidden>
+        <div class="face front" id="turnFront"></div>
+        <div class="face back" id="turnBack"></div>
+      </div>
+      <div class="cast" id="cast"></div>
+      <div class="gutter"></div>
+    </div>
+    <button type="button" class="arrow next" id="next" aria-label="The page after">&#8250;</button>
+    <div class="bookbar">
+      <span class="where" id="whereLabel"></span>
+      <button type="button" class="tolive" id="toLive" hidden>Jump to the page being written</button>
+      <details class="outline" id="outlineBox" hidden>
+        <summary id="outlineSummary">Outline</summary>
+        <ol id="outlineList"></ol>
+      </details>
+    </div>
+  </section>
   <section class="finish" id="finish" hidden></section>
 </main>
 
-<script src="/static/app.js"></script>
+<script src="/static/app.js?v=2"></script>
 </body>
 </html>

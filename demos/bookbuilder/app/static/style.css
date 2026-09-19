@@ -7,8 +7,21 @@
   --warm: #e0a866;
   --live: #6fd3a8;
   --bad: #ff8f7a;
-  --serif: Georgia, "Iowan Old Style", "Times New Roman", serif;
+  --serif: Georgia, "Iowan Old Style", "Palatino Linotype", "Times New Roman", serif;
   --sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+
+  /* The paper */
+  --paper: #f7f1e3;
+  --paper-low: #ece2cd;
+  --paper-ink: #221f1a;
+  --paper-soft: #7c7161;
+  --paper-rule: #d8cdb4;
+  --nib: #1f3f66;
+
+  /* One page turn, and the size of the printed page */
+  --turn-ms: 620ms;
+  --page-font: clamp(13px, 1.17vw, 17px);
+  --page-h: clamp(360px, calc(100vh - 236px), 780px);
 }
 * { box-sizing: border-box; }
 /* A class with a display rule would otherwise beat the hidden attribute. */
@@ -24,15 +37,17 @@ body {
 }
 a { color: var(--warm); }
 
+/* ------------------------------------------------------------- the top bar */
+
 .bar {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: 20;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 8px 14px;
-  padding: 10px 16px;
+  gap: 8px 18px;
+  padding: 8px 18px;
   background: rgba(13, 15, 20, 0.94);
   border-bottom: 1px solid var(--line);
   backdrop-filter: blur(6px);
@@ -46,22 +61,34 @@ a { color: var(--warm); }
 .home::before { content: "\25A0"; color: var(--warm); margin-right: 7px; }
 .crumb {
   color: var(--dim);
-  font-size: 14px;
-  max-width: 40vw;
+  font-family: var(--serif);
+  font-size: 15px;
+  max-width: 26vw;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .stats {
   display: flex;
-  gap: 12px;
+  gap: clamp(14px, 2.4vw, 34px);
   margin-left: auto;
   font-variant-numeric: tabular-nums;
-  font-size: 13px;
-  color: var(--dim);
 }
-.stats span { white-space: nowrap; }
-.stats #statRate { color: var(--live); }
+.stat { display: flex; flex-direction: column; line-height: 1.1; }
+.stat b {
+  font-size: clamp(19px, 2.1vw, 30px);
+  font-weight: 600;
+  white-space: nowrap;
+}
+.stat i {
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  color: var(--dim);
+  margin-top: 3px;
+}
+.stat.rate b { color: var(--live); }
 .ghost, .stop {
   font: inherit;
   font-size: 13px;
@@ -77,10 +104,17 @@ a { color: var(--warm); }
 .stop:hover { background: #2a1616; }
 .ghost:hover { background: var(--panel); }
 
+/* ------------------------------------------------------- the page around it */
+
 .sheet {
-  max-width: 46rem;
+  max-width: 76rem;
   margin: 0 auto;
-  padding: 20px 16px 96px;
+  padding: 14px 16px 80px;
+}
+.setup, .status, .error {
+  max-width: 46rem;
+  margin-left: auto;
+  margin-right: auto;
 }
 h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 8px; }
 .setup {
@@ -88,6 +122,7 @@ h1 { font-size: 1.6rem; line-height: 1.25; margin: 0 0 8px; }
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 18px;
+  margin-top: 8px;
 }
 .idea, .facts { color: var(--dim); font-size: 14px; }
 label { display: block; font-size: 13px; color: var(--dim); margin: 12px 0 4px; }
@@ -119,11 +154,7 @@ textarea:focus, input:focus, select:focus { outline: 2px solid var(--warm); outl
 }
 .go:disabled { opacity: 0.5; cursor: default; }
 
-.status {
-  margin: 16px 0 0;
-  font-size: 14px;
-  color: var(--dim);
-}
+.status { margin: 10px auto 6px; font-size: 14px; color: var(--dim); text-align: center; }
 .status::before {
   content: "";
   display: inline-block;
@@ -138,7 +169,7 @@ textarea:focus, input:focus, select:focus { outline: 2px solid var(--warm); outl
 .status.still::before { animation: none; background: var(--dim); }
 
 .error {
-  margin: 16px 0;
+  margin: 16px auto;
   padding: 12px 14px;
   border: 1px solid #5a2b2b;
   border-left-width: 4px;
@@ -163,69 +194,350 @@ textarea:focus, input:focus, select:focus { outline: 2px solid var(--warm); outl
   font-size: 13px;
 }
 
-.outline { margin: 18px 0 0; font-size: 14px; }
+.outline { margin: 0; font-size: 13px; max-width: 42rem; }
 .outline summary { cursor: pointer; color: var(--dim); }
 .outline ol { margin: 10px 0 0; padding-left: 22px; color: var(--dim); }
 .outline li { margin-bottom: 6px; }
 .outline b { color: var(--ink); font-weight: 600; }
 
-.reader { margin-top: 10px; }
-.page {
-  border-top: 1px solid var(--line);
-  padding: 18px 0 4px;
-}
-.page-no {
-  font-size: 12px;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--dim);
-  margin-bottom: 8px;
-}
-.page-no a { color: var(--dim); text-decoration: none; }
-.page.live .page-no { color: var(--live); }
-.body, .page p {
-  font-family: var(--serif);
-  font-size: 1.05rem;
-  line-height: 1.72;
-}
-.body { white-space: pre-wrap; margin: 0; }
-.page p { margin: 0 0 1em; }
-.page.live .body::after {
-  content: "\258B";
-  color: var(--live);
-  animation: pulse 1s infinite;
-}
-.chapter {
-  font-size: 1.15rem;
-  margin: 28px 0 0;
-  padding-top: 18px;
-  border-top: 1px solid var(--line);
-  color: var(--warm);
-}
-.chapter + .page { border-top: 0; padding-top: 6px; }
-
+/* The run is over and the book stays open, so this is a strip under it, not a panel. */
 .finish {
-  margin: 24px 0 0;
-  padding: 16px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 6px 11px;
+  max-width: 74rem;
+  margin: 8px auto 0;
+  padding: 9px 12px;
   border: 1px solid var(--line);
-  border-radius: 12px;
+  border-radius: 10px;
   background: var(--panel);
 }
-.finish h2 { margin: 0 0 6px; font-size: 1.1rem; }
+.finish h2 { margin: 0; font-size: 1rem; }
+.finish .facts { margin: 0; }
 .share {
-  display: block;
-  margin: 10px 0;
-  padding: 10px 12px;
-  border-radius: 8px;
+  padding: 6px 11px;
+  border-radius: 7px;
   background: #0f1219;
   border: 1px solid var(--line);
   word-break: break-all;
-  font-size: 14px;
+  font-size: 13px;
+  text-decoration: none;
 }
-.truncated { color: var(--warm); font-size: 12px; margin-left: 8px; }
+.again {
+  font: inherit;
+  font-size: 13px;
+  padding: 6px 13px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: transparent;
+  color: var(--ink);
+  cursor: pointer;
+}
+.again:hover { background: #202533; }
 
-.reader h1 { font-size: 1.8rem; }
-.facts { margin: 14px 0 0; }
+/* ------------------------------------------------------------- the open book */
+
+.desk {
+  display: grid;
+  grid-template-columns: 46px minmax(0, 1fr) 46px;
+  grid-template-rows: auto auto;
+  align-items: center;
+  gap: 6px 10px;
+  max-width: 74rem;
+  margin: 6px auto 0;
+  overflow-x: clip;
+}
+.book {
+  --fit: 1;
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  width: 100%;
+  height: var(--page-h);
+  perspective: 2600px;
+  perspective-origin: 50% 42%;
+}
+.leaf { position: relative; width: 50%; height: 100%; }
+.gutter {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 26px;
+  margin-left: -13px;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(
+    to right,
+    rgba(58, 42, 22, 0) 0%,
+    rgba(58, 42, 22, 0.26) 42%,
+    rgba(30, 20, 10, 0.4) 50%,
+    rgba(58, 42, 22, 0.26) 58%,
+    rgba(58, 42, 22, 0) 100%
+  );
+}
+
+.paper {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  padding: clamp(16px, 2.6vh, 30px) clamp(18px, 2.4vw, 44px) clamp(10px, 1.6vh, 18px);
+  background: linear-gradient(160deg, var(--paper) 0%, var(--paper) 62%, var(--paper-low) 100%);
+  color: var(--paper-ink);
+  font-family: var(--serif);
+  font-size: calc(var(--page-font) * var(--fit));
+  line-height: 1.6;
+  box-shadow: 0 20px 44px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+.side-left .paper { border-radius: 7px 2px 2px 7px; }
+.side-right .paper { border-radius: 2px 7px 7px 2px; }
+/* The edge of the pile of sheets under the one on show. */
+.side-left::before, .side-right::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  bottom: 7px;
+  width: 7px;
+  z-index: -1;
+}
+.side-left::before {
+  left: -7px;
+  border-radius: 4px 0 0 4px;
+  background: repeating-linear-gradient(to right, #cfc3a8 0 1px, #efe6d2 1px 2px);
+}
+.side-right::before {
+  right: -7px;
+  border-radius: 0 4px 4px 0;
+  background: repeating-linear-gradient(to right, #efe6d2 0 1px, #cfc3a8 1px 2px);
+}
+.leaf.empty::before { display: none; }
+
+.runhead {
+  flex: 0 0 auto;
+  font-size: 0.66em;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--paper-soft);
+  border-bottom: 1px solid var(--paper-rule);
+  padding-bottom: 6px;
+  margin-bottom: 12px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.text {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  scrollbar-width: none;
+  text-align: justify;
+  hyphens: auto;
+  -webkit-hyphens: auto;
+}
+.text::-webkit-scrollbar { width: 0; height: 0; }
+.text p { margin: 0; }
+.text p + p { text-indent: 1.4em; }
+.opener { margin: 0.2em 0 1.1em; text-align: center; }
+.chapter-no {
+  display: block;
+  font-size: 0.72em;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--paper-soft);
+}
+.chapter-name {
+  display: block;
+  margin-top: 0.3em;
+  font-size: 1.28em;
+  font-style: italic;
+}
+.folio {
+  flex: 0 0 auto;
+  margin-top: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--paper-rule);
+  text-align: center;
+  font-size: 0.72em;
+  letter-spacing: 0.1em;
+  color: var(--paper-soft);
+}
+/* A page with more text than the paper holds scrolls, and says so. */
+.paper.more::after {
+  content: "";
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  bottom: 2.7em;
+  height: 2.2em;
+  pointer-events: none;
+  background: linear-gradient(to bottom, rgba(247, 241, 227, 0), var(--paper));
+}
+.folio .cut { margin-left: 1em; color: #8a5a22; }
+.caret {
+  display: inline-block;
+  width: 2px;
+  height: 0.95em;
+  margin-left: 1.5px;
+  vertical-align: -0.14em;
+  background: var(--nib);
+  animation: blink 1.05s steps(1) infinite;
+}
+@keyframes blink { 0%, 62% { opacity: 1; } 63%, 100% { opacity: 0.12; } }
+
+.title-page { justify-content: center; text-align: center; }
+.title-block { margin: auto; padding: 0 6%; }
+.title-block h2 {
+  margin: 0;
+  font-size: 2em;
+  font-weight: 400;
+  line-height: 1.22;
+}
+.title-block .rule {
+  width: 58px;
+  height: 1px;
+  margin: 1.1em auto;
+  background: var(--paper-rule);
+}
+.title-idea { margin: 0; font-style: italic; font-size: 0.96em; color: #4a443a; }
+.imprint {
+  margin: 1.6em 0 0;
+  font-size: 0.7em;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--paper-soft);
+}
+
+/* ------------------------------------------------------------ the page turn */
+
+.turner {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  z-index: 6;
+  transform-style: preserve-3d;
+  pointer-events: none;
+}
+.turner .face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.turner .face.back { transform: rotateY(180deg); }
+.turner .paper { border-radius: 4px; box-shadow: 0 16px 38px rgba(0, 0, 0, 0.45); }
+.turner .face::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 4px;
+  opacity: 0;
+  pointer-events: none;
+}
+.turner .front::after {
+  background: linear-gradient(to right, rgba(20, 12, 4, 0.42), rgba(20, 12, 4, 0) 45%, rgba(255, 248, 232, 0.5));
+}
+.turner .back::after {
+  background: linear-gradient(to left, rgba(20, 12, 4, 0.42), rgba(20, 12, 4, 0) 45%, rgba(255, 248, 232, 0.5));
+}
+.book.turn-fwd .turner,
+.book.turn-back .turner {
+  animation-duration: var(--turn-ms);
+  animation-timing-function: cubic-bezier(0.36, 0.06, 0.28, 1);
+  animation-fill-mode: forwards;
+}
+/* The leaf is put in place and painted before it starts to move, so its text is
+   measured against the same page size it will be read at. */
+.turner.at-right { left: 50%; width: 50%; transform-origin: left center; }
+.turner.at-left { left: 0; width: 50%; transform-origin: right center; }
+.book.turn-fwd .turner { animation-name: leaf-forward; }
+.book.turn-back .turner { animation-name: leaf-backward; }
+@keyframes leaf-forward { from { transform: rotateY(0deg); } to { transform: rotateY(-180deg); } }
+@keyframes leaf-backward { from { transform: rotateY(0deg); } to { transform: rotateY(180deg); } }
+@keyframes leaf-backward-single { from { transform: rotateY(-180deg); } to { transform: rotateY(0deg); } }
+.book.turn-fwd .face::after,
+.book.turn-back .face::after {
+  animation: sheen var(--turn-ms) ease-in-out forwards;
+}
+@keyframes sheen { 0% { opacity: 0; } 46% { opacity: 0.9; } 100% { opacity: 0; } }
+
+/* The shadow the turning leaf throws on the page it is sweeping over. */
+.cast {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 4;
+  opacity: 0;
+  pointer-events: none;
+  border-radius: 6px;
+}
+.book.turn-fwd .cast {
+  left: 0;
+  width: 50%;
+  background: linear-gradient(to left, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+  animation: cast-in var(--turn-ms) ease-in forwards;
+}
+.book.turn-back .cast {
+  right: 0;
+  width: 50%;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.62), rgba(0, 0, 0, 0));
+  animation: cast-in var(--turn-ms) ease-in forwards;
+}
+@keyframes cast-in { 0% { opacity: 0; } 55% { opacity: 0.85; } 100% { opacity: 0; } }
+
+/* --------------------------------------------------------- reading it back */
+
+.arrow {
+  grid-row: 1;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: var(--panel);
+  color: var(--ink);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  justify-self: center;
+}
+.arrow:hover:not(:disabled) { background: #202533; border-color: #3a4152; }
+.arrow:disabled { opacity: 0.22; cursor: default; }
+.arrow.prev { grid-column: 1; }
+.arrow.next { grid-column: 3; }
+.bookbar {
+  grid-column: 1 / -1;
+  grid-row: 2;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  min-height: 34px;
+  font-size: 13px;
+  color: var(--dim);
+}
+.where { font-variant-numeric: tabular-nums; }
+.tolive {
+  font: inherit;
+  font-size: 13px;
+  padding: 5px 13px;
+  border-radius: 999px;
+  border: 1px solid #2f5a48;
+  background: #12251e;
+  color: var(--live);
+  cursor: pointer;
+}
+.tolive:hover { background: #17332a; }
+
+/* ------------------------------------------- the saved book and the shelf */
+
+body.reader .sheet { max-width: 50rem; }
+.reader h1 { font-family: var(--serif); font-size: 2rem; font-weight: 400; margin-top: 18px; }
+.reader .facts { margin: 10px 0 0; }
+.reader .idea { font-style: italic; }
 .toc { margin: 22px 0; }
 .toc h2 { font-size: 1rem; color: var(--dim); margin: 0 0 8px; }
 .toc ol, .booklist { padding-left: 20px; }
@@ -237,10 +549,73 @@ textarea:focus, input:focus, select:focus { outline: 2px solid var(--warm); outl
 .booklist li { padding-bottom: 10px; border-bottom: 1px solid var(--line); }
 .end { margin-top: 32px; font-size: 14px; }
 
-@media (max-width: 420px) {
-  .sheet { padding: 16px 14px 80px; }
-  .crumb { max-width: 100%; order: 3; flex-basis: 100%; }
-  .stats { order: 4; flex-basis: 100%; margin-left: 0; }
+.reader .chapter {
+  font-family: var(--serif);
+  font-size: 1.2rem;
+  font-weight: 400;
+  color: var(--warm);
+  margin: 34px 0 12px;
+  letter-spacing: 0.02em;
+}
+.reader .page {
+  position: relative;
+  margin: 0 0 18px;
+  padding: 30px clamp(20px, 5vw, 52px) 34px;
+  border-radius: 4px;
+  background: linear-gradient(160deg, var(--paper) 0%, var(--paper) 64%, var(--paper-low) 100%);
+  color: var(--paper-ink);
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.45);
+  font-family: var(--serif);
+  font-size: 1.02rem;
+  line-height: 1.68;
+  text-align: justify;
+  hyphens: auto;
+}
+.reader .page p { margin: 0; }
+.reader .page p + p { text-indent: 1.4em; }
+.reader .page-no {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 10px;
+  text-align: center;
+  font-size: 12px;
+  letter-spacing: 0.1em;
+  color: var(--paper-soft);
+}
+.reader .page-no a { color: var(--paper-soft); text-decoration: none; }
+
+/* ------------------------------------------------------------ small screens */
+
+@media (max-width: 860px) {
+  :root { --page-font: clamp(13px, 3.6vw, 16px); --page-h: clamp(340px, calc(100vh - 252px), 820px); }
+  .sheet { padding: 10px 12px 72px; }
+  /* One page, the full width of the phone, and the arrows drop under it. */
+  .desk { grid-template-columns: minmax(0, 1fr); }
+  .book { grid-column: 1; }
+  .arrow.prev, .arrow.next { grid-row: 2; grid-column: 1; align-self: start; }
+  .arrow.prev { justify-self: start; }
+  .arrow.next { justify-self: end; }
+  .bookbar { grid-row: 2; grid-column: 1; padding: 0 46px; }
+  .side-left { display: none; }
+  .side-right { width: 100%; }
+  .gutter { display: none; }
+  .turner.at-right, .turner.at-left { left: 0; width: 100%; transform-origin: left center; }
+  .book.turn-back .turner { animation-name: leaf-backward-single; }
+  .book.turn-fwd .cast, .book.turn-back .cast { left: 0; right: auto; width: 100%; }
+  .side-right .paper { border-radius: 4px; }
+  .arrow { width: 36px; height: 36px; font-size: 20px; }
+}
+
+@media (max-width: 560px) {
+  .bar { gap: 6px 12px; padding: 7px 12px; }
+  .crumb { max-width: 100%; order: 3; flex-basis: 100%; font-size: 14px; }
+  .stats { order: 4; flex-basis: 100%; margin-left: 0; justify-content: space-between; }
+  .stat b { font-size: 21px; }
   h1 { font-size: 1.35rem; }
-  .body, .page p { font-size: 1.02rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root { --turn-ms: 1ms; }
+  .caret, .status::before { animation: none; }
 }
