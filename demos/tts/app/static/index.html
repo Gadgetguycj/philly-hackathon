@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Text to Speech</title>
+<link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+<main>
+  <header>
+    <h1>Text to Speech</h1>
+    <p class="sub">Chatterbox Turbo, an open model from Resemble AI, running on RunPod.</p>
+  </header>
+
+  <section class="panel">
+    <label for="text">Your text</label>
+    <textarea id="text" rows="9" spellcheck="false" placeholder="Paste a paragraph, a chapter, or a script."></textarea>
+    <div class="counter-row">
+      <span id="counter" class="counter">0 of 2000 words</span>
+      <button id="clear" class="link" type="button">Clear</button>
+    </div>
+  </section>
+
+  <section class="panel">
+    <label>Voice</label>
+    <p class="hint">Tap a name to pick it. Tap Play to hear one line first.</p>
+    <div id="voices" class="voices"></div>
+  </section>
+
+  <section class="panel">
+    <label>Your own voice</label>
+    <p id="clone-note" class="hint">Loading.</p>
+    <div id="clone-controls" class="clone hidden">
+      <input id="clip" type="file" accept=".wav,.mp3,.m4a,.ogg">
+      <button id="clone-clear" class="link hidden" type="button">Use a preset voice again</button>
+    </div>
+    <p id="clone-status" class="status hidden"></p>
+  </section>
+
+  <button id="speak" class="speak" type="button">Speak</button>
+
+  <section id="output" class="panel hidden">
+    <p id="progress" class="progress"></p>
+    <p id="first-audio" class="hint hidden"></p>
+    <div class="row">
+      <button id="stop" class="link hidden" type="button">Stop playback</button>
+    </div>
+    <audio id="player" class="player hidden" controls preload="metadata"></audio>
+    <a id="download" class="download hidden" href="#">Download the wav</a>
+    <p id="error" class="error hidden"></p>
+  </section>
+
+  <footer>
+    <p class="hint">Audio is generated on RunPod's public chatterbox-turbo endpoint and stored on this server.</p>
+  </footer>
+</main>
+<audio id="preview-player" preload="none"></audio>
+<script src="/static/app.js"></script>
+</body>
+</html>
