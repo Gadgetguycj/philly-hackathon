@@ -42,11 +42,11 @@ fonts:
 
 <div class="body sm">
 
-1. Open https://dash.galaxygate.net/-/register. If the coupon box is empty, type the coupon code from the GalaxyGate table.
+1. Open https://dash.galaxygate.net/-/register and put `PHILLYHACKATHON-60` in the coupon box.
 2. Open the verification email and click the link. Check spam if it does not arrive within a minute.
 3. Sign in at https://dash.galaxygate.net. You should see one workspace and no servers.
 
-<p class="cap">If you already had a GalaxyGate account before the event, sign in and ask at the GalaxyGate table to apply the coupon.</p>
+<p class="cap">If you already had a GalaxyGate account before the event, sign in and ask at the GalaxyGate table to apply the coupon <code>PHILLYHACKATHON-60</code>.</p>
 
 <div class="shotwrap"><img src="/gg-coupon.png" class="shot" /></div>
 
