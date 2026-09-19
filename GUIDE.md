@@ -18,9 +18,9 @@ If you have none of these, use Cursor.
 
 ### 2. Create your GalaxyGate account
 
-1. Open https://dash.galaxygate.net/-/register. If the coupon box is empty, type the coupon code from the GalaxyGate table.
+1. Open https://dash.galaxygate.net/-/register and put `PHILLYHACKATHON-60` in the coupon box.
 2. Open the verification email and click the link. Check your spam folder if it is not there within a minute.
-3. Sign in at https://dash.galaxygate.net. You should see one workspace and no servers. If you already had a GalaxyGate account before the event, sign in and ask at the GalaxyGate table to apply the coupon.
+3. Sign in at https://dash.galaxygate.net. You should see one workspace and no servers. If you already had a GalaxyGate account before the event, sign in and ask at the GalaxyGate table to apply the coupon `PHILLYHACKATHON-60`.
 
 ### 3. Create your RunPod account and one API key
 
