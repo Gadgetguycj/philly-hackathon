@@ -8,7 +8,7 @@ Coffee & Code AI Agent Hackathon. Do the account steps, open the section for you
 2. Sign up at https://console.runpod.io/signup, then claim your RunPod credit and enter the swag raffle at https://runpod.galaxygate.app.
 3. In the RunPod console open Settings, API Keys, Create API Key. Name it `hackathon-app`, permission `All`, and copy it now, because RunPod shows it once. It belongs in your app's environment, never in your repository.
 
-Your team name is 3 to 32 characters, lowercase letters, digits and hyphens, starting and ending with a letter or digit. Setup takes a while, so stay at the laptop and watch for approval prompts. You are done when the health check and one generation pass and your URL opens on your phone.
+Your team name is 3 to 32 characters, lowercase letters, digits and hyphens, starting and ending with a letter or digit, and it becomes your app's public hostname at `https://TEAM.galaxygate.app`. Setup takes a while, so stay at the laptop and watch for approval prompts. You are done when the health check and one generation pass and your URL opens on your phone.
 
 ## Using Claude Code
 
@@ -19,7 +19,7 @@ claude mcp add -t http galaxygate https://mcp.galaxygate.net/mcp
 claude mcp add -t http runpod https://mcp.getrunpod.io/
 ```
 
-Start `claude` there, type `/mcp`, and sign in to both servers. Always start Claude Code from this folder.
+Start `claude --permission-mode manual` there, type `/mcp`, and sign in to both servers. Always start Claude Code from this folder with that flag, so it asks you to approve each step instead of refusing one on its own.
 
 Fill in your team name and key, then paste this.
 
@@ -140,6 +140,7 @@ Ties break on Simple to use, then Reliable.
 ## When something fails
 
 - **A tool call is denied or says Needs login.** Redo that sign-in in your tool.
+- **A tool call says `denied by auto mode` and `Blocked by classifier`, and no approval prompt appears.** Press shift+tab until Claude Code shows manual mode, then tell your agent to continue.
 - **The agent stopped.** Paste the same block in a new chat, with the same team name and key.
 - **A generation returns 401.** Make a new RunPod key and have your agent update the app's environment.
 - **RunPod returns 402.** Your credit is gone, so check the console.

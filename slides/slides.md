@@ -63,7 +63,7 @@ favicon: ./favicon.png
 <pre class="code tight"><span class="l"><span class="nb">claude</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">-t</span> <span class="nb">http</span> <span class="nb">galaxygate</span> <span class="nb">https://mcp.galaxygate.net/mcp</span></span>
 <span class="l"><span class="nb">claude</span> <span class="nb">mcp</span> <span class="nb">add</span> <span class="nb">-t</span> <span class="nb">http</span> <span class="nb">runpod</span> <span class="nb">https://mcp.getrunpod.io/</span></span></pre>
 
-<p class="cap">Start <code>claude</code> there, type <code>/mcp</code>, and sign in to both servers. Always start Claude Code from this folder.</p>
+<p class="cap">Start <code>claude --permission-mode manual</code> there, type <code>/mcp</code>, and sign in to both servers. Always start Claude Code from this folder with that flag, so it asks you to approve each step instead of refusing one on its own.</p>
 
 <p class="cap">Fill in your team name and key, then paste this.</p>
 
@@ -292,6 +292,7 @@ Reference only. Do not present.
 <div class="body">
 
 - **A tool call is denied or says Needs login.** Redo that sign-in in your tool.
+- **A tool call says `denied by auto mode` and `Blocked by classifier`, and no approval prompt appears.** Press shift+tab until Claude Code shows manual mode, then tell your agent to continue.
 - **The agent stopped.** Paste the same block in a new chat, with the same team name and key.
 - **A generation returns 401.** Make a new RunPod key and have your agent update the app’s environment.
 - **RunPod returns 402.** Your credit is gone, so check the console.
